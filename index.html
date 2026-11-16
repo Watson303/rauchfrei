@@ -165,7 +165,7 @@ svg text{fill:var(--muted);font-size:10px;font-family:inherit}
 // Hier kann die Client-ID aus dem Google-Cloud-Projekt fest eingetragen werden.
 // Bleibt sie leer, kann man sie in der App unter „Mehr → Google Drive“ eintragen.
 const GOOGLE_CLIENT_ID = '663949454194-uvp8nkc63rptnpkpnkbh8r7u8a9m5lje.apps.googleusercontent.com';
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.5';
 const FILE_NAME = 'rauchfrei-daten.json';
 const ITER = 300000;
 const LS = {blob:'rf_blob', key:'rf_key', me:'rf_me', drive:'rf_drive'};
@@ -222,6 +222,74 @@ const TIPS = [
  'Räum schnell eine Schublade auf – Ablenkung mit Ergebnis.'
 ];
 const TRIGGERS = ['Kaffee','Nach dem Essen','Stress','Alkohol','Langeweile','Pause','Andere rauchen','Auto fahren','Ärger','Müdigkeit','Sonstiges'];
+/* ============ Quiz-Fragen ============ */
+// c = Index der richtigen Antwort, x = kurze Erklärung
+const QUIZ_H = [
+ {q:'Wie viele chemische Stoffe enthält Tabakrauch ungefähr?',a:['500','Über 7.000','Etwa 50','Über 100.000'],c:1,x:'Im Tabakrauch stecken über 7.000 Stoffe, viele davon giftig.'},
+ {q:'Wie viele Stoffe im Tabakrauch gelten als krebserregend (etwa)?',a:['7','70','700','7.000'],c:1,x:'Rund 70 Stoffe im Rauch gelten als krebserregend oder vermutlich krebserregend.'},
+ {q:'Welcher Stoff im Rauch blockiert den Sauerstofftransport im Blut?',a:['Nikotin','Teer','Kohlenmonoxid','Ammoniak'],c:2,x:'Kohlenmonoxid bindet sich an die roten Blutkörperchen und verdrängt den Sauerstoff.'},
+ {q:'Welcher Stoff im Tabak macht abhängig?',a:['Teer','Nikotin','Kohlenmonoxid','Feinstaub'],c:1,x:'Nikotin wirkt im Gehirn und macht abhängig.'},
+ {q:'Wie lange dauert eine akute Welle von Rauchverlangen meistens?',a:['Wenige Sekunden','Wenige Minuten','Etwa 2 Stunden','Einen ganzen Tag'],c:1,x:'Meist ist die stärkste Welle nach wenigen Minuten vorbei – durchhalten lohnt sich.'},
+ {q:'Nach wie vielen Stunden ohne Zigarette ist der Kohlenmonoxidwert im Blut wieder normal?',a:['Nach 1 Stunde','Nach etwa 12 Stunden','Nach 1 Woche','Nach 1 Monat'],c:1,x:'Nach etwa 12 Stunden ist das Kohlenmonoxid weitgehend abgebaut.'},
+ {q:'Wann ist das Nikotin weitgehend aus dem Körper abgebaut?',a:['Nach 2 Stunden','Nach etwa 3 Tagen','Nach 3 Monaten','Nach 1 Jahr'],c:1,x:'Nach etwa 72 Stunden ist das Nikotin weitgehend abgebaut – die körperliche Entwöhnung ist dann am härtesten geschafft.'},
+ {q:'Wie verändert sich das Risiko für Herzkrankheiten nach einem Jahr rauchfrei?',a:['Gar nicht','Es halbiert sich etwa','Es verdoppelt sich','Es ist schon wie bei Nichtrauchern'],c:1,x:'Nach einem Jahr ist das Risiko etwa halb so hoch wie bei Rauchern.'},
+ {q:'Wie heißen die feinen Härchen in den Bronchien, die sich nach dem Rauchstopp erholen?',a:['Flimmerhärchen','Lungenbläschen','Nasenhaare','Zotten'],c:0,x:'Die Flimmerhärchen transportieren Schleim und Schmutz aus der Lunge – Rauch legt sie lahm.'},
+ {q:'Wofür steht die Lungenkrankheit, die vor allem Raucher betrifft und mit "Raucherhusten" beginnt?',a:['COPD','ADHS','BMI','EKG'],c:0,x:'COPD ist eine chronische, fortschreitende Lungenerkrankung – Rauchen ist die Hauptursache.'},
+ {q:'Welche Sinne werden schon nach etwa 2 Tagen rauchfrei besser?',a:['Hören und Sehen','Riechen und Schmecken','Tasten','Gleichgewicht'],c:1,x:'Die Nervenenden erholen sich – Essen schmeckt wieder intensiver.'},
+ {q:'Wie viele Menschen sterben in Deutschland jedes Jahr an den Folgen des Rauchens (etwa)?',a:['Etwa 13.000','Etwa 130.000','Etwa 1,3 Millionen','Etwa 1.300'],c:1,x:'Laut Deutschem Krebsforschungszentrum sind es rund 127.000 Menschen pro Jahr.'},
+ {q:'Wie viele Menschen sterben laut WHO weltweit jedes Jahr an den Folgen des Tabakkonsums?',a:['Etwa 80.000','Etwa 800.000','Über 8 Millionen','Über 80 Millionen'],c:2,x:'Die WHO spricht von über 8 Millionen Todesfällen pro Jahr, auch durch Passivrauchen.'},
+ {q:'An welchem Tag ist der Weltnichtrauchertag?',a:['1. Januar','31. Mai','3. Oktober','24. Dezember'],c:1,x:'Die WHO hat den 31. Mai zum Weltnichtrauchertag erklärt.'},
+ {q:'Welches davon ist KEIN Nikotinersatzprodukt?',a:['Nikotinpflaster','Nikotinkaugummi','Nikotin-Lutschtablette','Aspirin'],c:3,x:'Aspirin ist ein Schmerzmittel. Pflaster, Kaugummi und Lutschtabletten mit Nikotin können beim Aufhören helfen.'},
+ {q:'Was passiert mit der Haut durch Rauchen?',a:['Sie altert schneller','Sie wird glatter','Sie bräunt schneller','Nichts'],c:0,x:'Rauchen verschlechtert die Durchblutung der Haut, sie altert schneller und bekommt früher Falten.'},
+ {q:'Was macht Rauchen mit den Blutgefäßen?',a:['Es weitet sie','Es verengt sie','Nichts','Es reinigt sie'],c:1,x:'Rauchen verengt die Gefäße und fördert Ablagerungen – bis hin zum "Raucherbein".'},
+ {q:'Bei 20 Zigaretten am Tag und 8,50 € pro Schachtel (20 Stück): Wie viel spart man in einem Jahr?',a:['Etwa 850 €','Etwa 1.500 €','Etwa 3.100 €','Etwa 6.200 €'],c:2,x:'365 Schachteln × 8,50 € = 3.102,50 € – pro Person!'},
+ {q:'Wie viele Zigaretten sind es im Jahr bei 20 Stück am Tag?',a:['2.000','3.650','7.300','12.000'],c:2,x:'20 × 365 = 7.300 Zigaretten pro Jahr.'},
+ {q:'Was hilft laut Fachleuten gut gegen akutes Rauchverlangen?',a:['Ablenkung und Bewegung','Eine "letzte" Zigarette','Kaffee und Alkohol','Gar nichts'],c:0,x:'Ablenkung, Bewegung, Wasser trinken oder Atemübungen helfen, die Welle zu überstehen.'},
+ {q:'Was ist "Passivrauchen"?',a:['Rauchen ohne Inhalieren','Das Einatmen vom Rauch anderer','E-Zigarette rauchen','Rauchen im Liegen'],c:1,x:'Wer den Rauch anderer einatmet, raucht unfreiwillig mit – auch das schadet.'},
+ {q:'Welcher Teil des Körpers bekommt beim Rauchen den meisten Teer ab?',a:['Die Leber','Die Lunge','Der Magen','Die Nieren'],c:1,x:'Teer lagert sich vor allem in den Atemwegen und der Lunge ab.'}
+];
+const QUIZ_G = [
+ {q:'Was ist die Hauptstadt von Australien?',a:['Sydney','Melbourne','Canberra','Perth'],c:2},
+ {q:'Wie viele Bundesländer hat Deutschland?',a:['12','14','16','18'],c:2},
+ {q:'Welcher ist der höchste Berg Deutschlands?',a:['Watzmann','Zugspitze','Brocken','Feldberg'],c:1},
+ {q:'Welches chemische Zeichen hat Gold?',a:['Go','Gd','Au','Ag'],c:2},
+ {q:'Wie viele Beine hat eine Spinne?',a:['6','8','10','12'],c:1},
+ {q:'Welcher ist der größte Planet unseres Sonnensystems?',a:['Saturn','Erde','Jupiter','Neptun'],c:2},
+ {q:'Wie viele Minuten hat ein Tag?',a:['1.200','1.440','1.600','2.400'],c:1},
+ {q:'Welches ist das größte Tier der Welt?',a:['Afrikanischer Elefant','Blauwal','Pottwal','Walhai'],c:1},
+ {q:'Welche Farbe entsteht, wenn man Blau und Gelb mischt?',a:['Lila','Orange','Grün','Braun'],c:2},
+ {q:'In welchem Land steht der Schiefe Turm von Pisa?',a:['Spanien','Italien','Frankreich','Griechenland'],c:1},
+ {q:'Wie heißt die Landeshauptstadt von Mecklenburg-Vorpommern?',a:['Rostock','Schwerin','Greifswald','Stralsund'],c:1},
+ {q:'Welche ist die größte Insel Deutschlands?',a:['Sylt','Usedom','Rügen','Fehmarn'],c:2},
+ {q:'Wie viele Zähne hat ein Erwachsener normalerweise inklusive Weisheitszähnen?',a:['28','30','32','36'],c:2},
+ {q:'Wie viele Kontinente gibt es (nach gängiger Zählung)?',a:['5','6','7','8'],c:2},
+ {q:'Bei wie viel Grad Celsius siedet Wasser auf Meereshöhe?',a:['90 °C','100 °C','110 °C','120 °C'],c:1},
+ {q:'Welches Gas nehmen Pflanzen für die Photosynthese auf?',a:['Sauerstoff','Stickstoff','Kohlendioxid','Wasserstoff'],c:2},
+ {q:'Wie viele Ecken hat ein Würfel?',a:['6','8','10','12'],c:1},
+ {q:'Wie viele Stunden hat eine Woche?',a:['148','160','168','176'],c:2},
+ {q:'Was misst ein Barometer?',a:['Temperatur','Luftdruck','Luftfeuchtigkeit','Windstärke'],c:1},
+ {q:'In welchem Jahr fiel die Berliner Mauer?',a:['1987','1989','1990','1991'],c:1},
+ {q:'Wer schrieb "Faust"?',a:['Schiller','Goethe','Lessing','Heine'],c:1},
+ {q:'Welcher ist der größte Ozean der Erde?',a:['Atlantik','Indischer Ozean','Pazifik','Arktischer Ozean'],c:2},
+ {q:'Welche Sprache spricht man in Brasilien?',a:['Spanisch','Portugiesisch','Englisch','Französisch'],c:1},
+ {q:'Wie viele Tasten hat ein normales Klavier?',a:['76','82','88','96'],c:2},
+ {q:'Welches Metall ist bei Raumtemperatur flüssig?',a:['Blei','Zinn','Quecksilber','Aluminium'],c:2},
+ {q:'Welches ist das flächenmäßig größte Bundesland?',a:['Niedersachsen','Bayern','Baden-Württemberg','Nordrhein-Westfalen'],c:1},
+ {q:'Wie viele Herzen hat ein Oktopus?',a:['1','2','3','4'],c:2},
+ {q:'Welcher Planet wird "Roter Planet" genannt?',a:['Venus','Mars','Merkur','Saturn'],c:1},
+ {q:'Welcher ist der längste Knochen im menschlichen Körper?',a:['Schienbein','Oberarmknochen','Oberschenkelknochen','Wirbelsäule'],c:2},
+ {q:'Welche Stadt wird "Elbflorenz" genannt?',a:['Hamburg','Magdeburg','Dresden','Meißen'],c:2},
+ {q:'Wie viele Spieler einer Fußballmannschaft stehen gleichzeitig auf dem Feld?',a:['9','10','11','12'],c:2},
+ {q:'Welches Organ pumpt das Blut durch den Körper?',a:['Lunge','Leber','Herz','Niere'],c:2},
+ {q:'Wie viele Sekunden hat eine Stunde?',a:['360','600','3.600','6.000'],c:2},
+ {q:'Durch welche Stadt fließt der Rhein NICHT?',a:['Köln','Düsseldorf','Bonn','Frankfurt am Main'],c:3},
+ {q:'Wie heißt der größte See, der ganz in Deutschland liegt?',a:['Bodensee','Müritz','Chiemsee','Starnberger See'],c:1},
+ {q:'Wie viele Saiten hat eine normale Gitarre?',a:['4','5','6','8'],c:2},
+ {q:'Welches Tier ist das schnellste an Land?',a:['Löwe','Gepard','Pferd','Antilope'],c:1},
+ {q:'In welcher Stadt steht das Brandenburger Tor?',a:['Potsdam','Berlin','Brandenburg an der Havel','Leipzig'],c:1},
+ {q:'Wie viele Tage hat ein Schaltjahr?',a:['364','365','366','367'],c:2},
+ {q:'Welches Vitamin bildet der Körper mit Hilfe von Sonnenlicht?',a:['Vitamin A','Vitamin C','Vitamin D','Vitamin K'],c:2}
+];
 const CHEERS = ['Du schaffst das! 💪','Ich bin stolz auf dich ❤️','Halt durch – das Verlangen geht vorbei!','Wir zwei packen das zusammen!','Denk an unser Sparziel 🎯','Schon wieder ein Tag geschafft – super! 🌱'];
 const H=36e5, D=864e5;
 const HEALTH = [
@@ -261,7 +329,10 @@ const BADGES = [
  {e:'🧘',t:'Ruhepol',d:'10 Atemübungen',f:c=>c.breaths>=10},
  {e:'🧩',t:'Abgelenkt',d:'Erstes Spiel gelöst',f:c=>c.games>=1},
  {e:'💌',t:'Mutmacher',d:'Erste Nachricht',f:c=>c.cheers>=1},
- {e:'📣',t:'Fan-Club',d:'10 Nachrichten',f:c=>c.cheers>=10}
+ {e:'📣',t:'Fan-Club',d:'10 Nachrichten',f:c=>c.cheers>=10},
+ {e:'🧠',t:'Quizfuchs',d:'Erstes Quiz-Duell',f:c=>c.quizPlays>=1},
+ {e:'⚡',t:'Volltreffer',d:'5 von 5 im Quiz',f:c=>c.quizPerfect>=1},
+ {e:'👑',t:'Quizkönig',d:'5 Duelle gewonnen',f:c=>c.quizWins>=5}
 ];
 const TEAM_BADGES = [
  {e:'🤝',t:'Team-Woche',d:'Beide 7 Tage rauchfrei',f:(a,b,g)=>a.days>=7&&b.days>=7},
@@ -319,12 +390,12 @@ const other = k => k==='a'?'b':'a';
 const P = k => S.state.people[k];
 
 function person(name){return {name, quit:Date.now(), perDay:20, packPrice:8.5, packSize:20, reasons:[], set:false, u:Date.now()}}
-function newState(a,b){return {v:1, people:{a:person(a),b:person(b)}, goal:{name:'Gemeinsamer Urlaub',amount:1500,u:Date.now()}, cravings:[], cheers:[], events:[], seen:{a:[],b:[]}, deleted:[]}}
+function newState(a,b){return {v:1, people:{a:person(a),b:person(b)}, goal:{name:'Gemeinsamer Urlaub',amount:1500,u:Date.now()}, cravings:[], cheers:[], events:[], quiz:[], seen:{a:[],b:[]}, deleted:[]}}
 function normalize(st){
   st.people=st.people||{};
   ['a','b'].forEach(k=>{st.people[k]=Object.assign(person(k==='a'?'Person 1':'Person 2'),st.people[k]||{});if(!Array.isArray(st.people[k].reasons))st.people[k].reasons=[]});
   st.goal=st.goal||{name:'Gemeinsames Ziel',amount:1000,u:0};
-  ['cravings','cheers','events','deleted'].forEach(f=>{if(!Array.isArray(st[f]))st[f]=[]});
+  ['cravings','cheers','events','quiz','deleted'].forEach(f=>{if(!Array.isArray(st[f]))st[f]=[]});
   st.seen=st.seen||{};st.seen.a=st.seen.a||[];st.seen.b=st.seen.b||[];
   return st;
 }
@@ -337,6 +408,7 @@ function merge(L,R){
     people:{a:newer(L.people.a,R.people.a),b:newer(L.people.b,R.people.b)},
     goal:newer(L.goal,R.goal),
     cravings:unionById(L.cravings,R.cravings,del),
+    quiz:unionById(L.quiz,R.quiz,del),
     cheers:unionById(L.cheers,R.cheers,del),
     events:unionById(L.events,R.events,del),
     seen:{a:[...new Set([...L.seen.a,...R.seen.a])],b:[...new Set([...L.seen.b,...R.seen.b])]},
@@ -357,7 +429,8 @@ function ctx(k){
     resisted:cr.filter(c=>c.resisted).length, diary:cr.length,
     breaths:st.events.filter(e=>e.p===k&&e.type==='breath').length,
     games:st.events.filter(e=>e.p===k&&e.type==='game').length,
-    cheers:st.cheers.filter(c=>c.from===k).length});
+    cheers:st.cheers.filter(c=>c.from===k).length,
+    quizPlays:st.quiz.filter(q=>q.p===k).length, quizPerfect:st.quiz.filter(q=>q.p===k&&q.score>=5).length, quizWins:quizStats()[k]});
 }
 function fmtDur(ms){
   const d=Math.floor(ms/D), h=Math.floor(ms%D/H), m=Math.floor(ms%H/6e4);
@@ -582,6 +655,7 @@ const VIEWS = {
    <div class="card"><div class="row"><b>🎯 ${esc(g.name)}</b><span class="small">${eur(total)} / ${eur(g.amount)}</span></div>
     <div class="bar thick"><i style="width:${gp.toFixed(1)}%"></i></div>
     <div class="small muted" style="margin-top:6px">${g.amount>0&&total>=g.amount?'Ziel erreicht – gönnt es euch! 🎉':'Noch '+eur(Math.max(0,g.amount-total))+' bis zum Ziel. Zusammen spart ihr '+eur((pnum(P('a').perDay)*pnum(P('a').packPrice)/(P('a').packSize||20))+(pnum(P('b').perDay)*pnum(P('b').packPrice)/(P('b').packSize||20)))+' pro Tag.'}</div></div>
+   ${quizCard()}
    <button class="btn big" data-act="cheer">💌 ${esc(P(o).name)} anfeuern</button>`;
  },
 
@@ -672,7 +746,8 @@ const VIEWS = {
     <label>Zigaretten pro Schachtel<input type="number" name="packSize" min="1" step="1" inputmode="numeric" value="${p.packSize}"></label>
     <div class="two" style="margin-top:12px"><button class="btn primary">Speichern</button><button type="button" class="btn ghost" data-act="restart" data-k="${x}">Neu starten</button></div></form>`};
   return `
-   <div class="two" style="margin-bottom:14px"><button class="btn big" data-act="breath">🫁 Atemübung</button><button class="btn big" data-act="game">🧩 Spiel</button></div>
+   <div class="two" style="margin-bottom:8px"><button class="btn big" data-act="breath">🫁 Atemübung</button><button class="btn big" data-act="game">🧩 Spiel</button></div>
+   <button class="btn big" style="margin-bottom:14px" data-act="quiz">🧠 Quiz-Duell</button>
    <details class="card" ${ui.open==='reasons'?'open':''} data-sec="reasons"><summary>💡 Meine Gründe</summary>
     <p class="small muted">Warum hörst du auf? Deine Gründe erscheinen, wenn du den 🆘-Knopf drückst.</p>
     <ul class="rlist">${P(k).reasons.map((r,i)=>`<li><span>${esc(r)}</span><button data-act="delReason" data-i="${i}" aria-label="Entfernen">×</button></li>`).join('')||'<li class="muted"><span>Noch keine Gründe eingetragen.</span></li>'}</ul>
@@ -806,6 +881,105 @@ function cidModal(after){
     <form data-form="cidModal"><input name="cid" value="${esc(Drive.cfg().cid||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" required><button class="btn primary" style="margin-top:10px">Weiter</button></form>`, after};
 }
 
+/* ============ Quiz-Duell ============ */
+function seedRng(seed){let h=1779033703^seed.length;for(let i=0;i<seed.length;i++){h=Math.imul(h^seed.charCodeAt(i),3432918353);h=h<<13|h>>>19}
+  return function(){h=Math.imul(h^(h>>>16),2246822507);h=Math.imul(h^(h>>>13),3266489909);h^=h>>>16;return (h>>>0)/4294967296}}
+function sshuffle(a,r){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const dayKey=(t)=>{const d=t?new Date(t):new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const dayLabel=k=>{const [y,m,d]=k.split('-');return d+'.'+m+'.'};
+const QUIZ_N=5, QUIZ_SEC=15;
+function quizSet(day,practice){
+  const r=practice?Math.random:seedRng('rf-quiz-'+day);
+  const qs=sshuffle([...sshuffle(QUIZ_H,r).slice(0,2),...sshuffle(QUIZ_G,r).slice(0,3)],r);
+  return qs.map(q=>{const order=sshuffle(q.a.map((t,i)=>i),r);return {q:q.q,a:order.map(i=>q.a[i]),c:order.indexOf(q.c),x:q.x||''}});
+}
+function quizResult(day,k){return S.state.quiz.find(q=>q.day===day&&q.p===k)}
+function duelWinner(ra,rb){if(!ra||!rb)return null;if(ra.score!==rb.score)return ra.score>rb.score?'a':'b';if(ra.ms!==rb.ms)return ra.ms<rb.ms?'a':'b';return 'draw'}
+function quizStats(){
+  const days=[...new Set(S.state.quiz.map(q=>q.day))].sort().reverse(), res={a:0,b:0,draw:0,list:[]};
+  days.forEach(d=>{const ra=quizResult(d,'a'),rb=quizResult(d,'b'),w=duelWinner(ra,rb);if(w)res[w]++;res.list.push({d,ra,rb,w})});
+  return res;
+}
+const fmtSec=ms=>(ms/1000).toFixed(1).replace('.',',')+' s';
+function quizCard(){
+  const k=me(),o=other(k),d=dayKey(),mine=quizResult(d,k),theirs=quizResult(d,o),st=quizStats();
+  let line;
+  if(!mine&&!theirs) line='Heute hat noch keiner gespielt. Leg vor!';
+  else if(!mine) line=`${esc(P(o).name)} hat schon ${theirs.score} von ${QUIZ_N} – schaffst du mehr?`;
+  else if(!theirs) line=`Du hast ${mine.score} von ${QUIZ_N}. Jetzt ist ${esc(P(o).name)} dran.`;
+  else {const w=duelWinner(quizResult(d,'a'),quizResult(d,'b'));line=w==='draw'?`Unentschieden! ${mine.score}:${theirs.score} in gleicher Zeit.`:`${esc(P(w).name)} gewinnt heute ${Math.max(mine.score,theirs.score)}:${Math.min(mine.score,theirs.score)}${mine.score===theirs.score?' (schneller)':''} 🏆`}
+  return `<div class="card"><div class="row"><b>🧠 Quiz-Duell heute</b><span class="small muted">Stand ${st.a}:${st.b}</span></div>
+   <p class="small" style="margin:8px 0 10px">${line}</p>
+   <button class="btn ${mine?'ghost':'primary'}" data-act="quiz">${mine?'Ergebnisse ansehen':'Jetzt spielen'}</button></div>`;
+}
+let Q=null;
+function quizModal(){
+  return {
+    html(){
+      const k=me(),o=other(k),d=dayKey();
+      if(!Q){ // Übersicht
+        const mine=quizResult(d,k),theirs=quizResult(d,o),st=quizStats();
+        return `<h2>🧠 Quiz-Duell</h2>
+         <p class="small muted">Jeden Tag gibt es ${QUIZ_N} neue Fragen – für euch beide dieselben. Pro Frage habt ihr ${QUIZ_SEC} Sekunden. Wer mehr richtig hat, gewinnt; bei Gleichstand entscheidet die Zeit.</p>
+         <div class="kpis"><div style="--pc:var(--a)"><b style="color:var(--a)">${st.a}</b><span>Siege ${esc(P('a').name)}</span></div><div><b>${st.draw}</b><span>Unentschieden</span></div><div><b style="color:var(--b)">${st.b}</b><span>Siege ${esc(P('b').name)}</span></div></div>
+         <h3>Heute (${dayLabel(d)})</h3>
+         <div class="small">${esc(P(k).name)}: <b>${mine?mine.score+' von '+QUIZ_N+' · '+fmtSec(mine.ms):'noch nicht gespielt'}</b></div>
+         <div class="small">${esc(P(o).name)}: <b>${theirs?theirs.score+' von '+QUIZ_N+' · '+fmtSec(theirs.ms):'noch nicht gespielt'}</b></div>
+         <div class="stack" style="margin-top:14px">${mine?'':`<button class="btn primary big" data-act="quizStart">Duell starten</button>`}
+          <button class="btn ghost" data-act="quizPractice">Übungsrunde (zählt nicht)</button></div>
+         ${st.list.length?`<h3>Letzte Duelle</h3>${st.list.slice(0,10).map(x=>`<div class="hbar"><span>${dayLabel(x.d)}</span><span style="flex:1">${x.ra?x.ra.score:'–'} : ${x.rb?x.rb.score:'–'}</span><b style="width:auto">${x.w?(x.w==='draw'?'🤝':'🏆 '+esc(P(x.w).name)):'offen'}</b></div>`).join('')}`:''}
+         ${Drive.on()?'':`<p class="small muted" style="margin-top:12px">Tipp: Mit Google Drive seht ihr die Ergebnisse des anderen auf eurem eigenen Handy.</p>`}`;
+      }
+      if(Q.i>=Q.set.length){ // Ende
+        const theirs=Q.practice?null:quizResult(Q.day,o);
+        let verdict='';
+        if(theirs){const w=duelWinner(k==='a'?Q.res:theirs,k==='a'?theirs:Q.res);verdict=w==='draw'?'Unentschieden! 🤝':w===k?'Du gewinnst heute! 🏆':`${esc(P(o).name)} gewinnt heute – morgen gibt's Revanche!`}
+        else if(!Q.practice) verdict=`Jetzt ist ${esc(P(o).name)} dran!`;
+        return `<h2>${Q.practice?'Übungsrunde':'Quiz-Duell'} beendet</h2>
+          <div class="cd" style="color:var(--acc)">${Q.score} / ${Q.set.length}</div>
+          <p class="center small muted">in ${fmtSec(Q.ms)}</p>
+          ${theirs?`<p class="center">${esc(P(o).name)}: <b>${theirs.score} / ${QUIZ_N}</b> in ${fmtSec(theirs.ms)}</p>`:''}
+          <p class="center"><b>${verdict}</b></p>
+          <div class="stack"><button class="btn primary" data-act="quizBack">Zur Übersicht</button>${Q.practice?'<button class="btn ghost" data-act="quizPractice">Noch eine Übungsrunde</button>':''}</div>`;
+      }
+      const it=Q.set[Q.i], picked=Q.picked;
+      return `<div class="row small muted" style="padding-right:40px"><span>${Q.practice?'Übung · ':''}Frage ${Q.i+1} von ${Q.set.length}</span><span>${Q.score} richtig</span></div>
+        <div class="bar" style="margin:8px 0 14px"><i id="qbar" style="width:100%;transition:width .1s linear"></i></div>
+        <h2 style="padding-right:30px">${esc(it.q)}</h2>
+        <div class="stack">${it.a.map((t,i)=>{let st='';if(picked!=null){if(i===it.c)st='background:var(--acc);border-color:var(--acc);color:#fff;opacity:1';else if(i===picked)st='background:var(--sos);border-color:var(--sos);color:#fff;opacity:1'}
+          return `<button class="btn" style="justify-content:flex-start;text-align:left;${st}" data-act="quizAns" data-i="${i}" ${picked!=null?'disabled':''}>${esc(t)}</button>`}).join('')}</div>
+        ${picked!=null?`<div class="tip" style="margin-top:12px"><b>${picked===it.c?'Richtig! 🎉':picked<0?'Zeit abgelaufen ⏰':'Leider falsch.'}</b>${it.x?'<br>'+esc(it.x):''}</div>
+          <button class="btn primary" data-act="quizNext">${Q.i+1<Q.set.length?'Nächste Frage':'Ergebnis'}</button>`:''}`;
+    },
+    init(){
+      if(!Q||Q.i>=Q.set.length||Q.picked!=null) return;
+      Q.qStart=Date.now();
+      M.timers.push(setInterval(()=>{const left=QUIZ_SEC*1000-(Date.now()-Q.qStart),b=$('#qbar');if(b)b.style.width=Math.max(0,left/(QUIZ_SEC*10))+'%';if(left<=0)quizAnswer(-1)},100));
+    }
+  };
+}
+function quizAbort(){
+  if(!Q||Q.practice||Q.i>=Q.set.length)return;
+  if(Q.picked==null){Q.ms+=Math.min(QUIZ_SEC*1000,Date.now()-(Q.qStart||Date.now()))}
+  Q.i=Q.set.length-1;Q.picked=-2;quizNext();Q=null;toast('Quiz abgebrochen – das Ergebnis bis hierhin zählt.');
+}
+function quizBegin(practice){const d=dayKey();Q={day:d,practice,set:quizSet(d,practice),i:0,score:0,ms:0,picked:null};showTop()}
+function quizAnswer(i){
+  if(!Q||Q.picked!=null)return;
+  const el=Math.min(QUIZ_SEC*1000,Date.now()-Q.qStart);
+  Q.picked=i;Q.ms+=el;if(i===Q.set[Q.i].c)Q.score++;
+  showTop();
+}
+function quizNext(){
+  Q.i++;Q.picked=null;
+  if(Q.i>=Q.set.length&&!Q.practice){
+    const k=me();
+    if(!quizResult(Q.day,k)){Q.res={id:uid(),p:k,day:Q.day,score:Q.score,ms:Q.ms,t:Date.now()};S.state.quiz.push(Q.res);commit();scheduleSync(true)}
+    else Q.res=quizResult(Q.day,k);
+  }
+  showTop();
+}
+
 /* ============ Dateien ============ */
 let fileCb=null;
 function chooseFile(cb){fileCb=cb;const f=$('#filein');f.value='';f.click()}
@@ -834,7 +1008,7 @@ async function importIntoSession(j){
 /* ============ Aktionen ============ */
 const ACT = {
   tab(el){ui.tab=el.dataset.tab;render();window.scrollTo(0,0)},
-  close(){popModal()},
+  close(){quizAbort();popModal()},
   goSettings(){ui.tab='more';ui.open='settings';render();window.scrollTo(0,0)},
   sos(){sosStart=Date.now();sosTip=tipText();pushModal(sosModal())},
   newTip(){sosTip=tipText();$('#tipTxt').textContent=sosTip},
@@ -874,6 +1048,12 @@ const ACT = {
     showAuth('Alles gelöscht. Jetzt einmal neu einrichten.');
   },
   checkUpdate(){checkUpdate(true)},
+  quiz(){Q=null;pushModal(quizModal())},
+  quizStart(){if(quizResult(dayKey(),me())){toast('Du hast heute schon gespielt – morgen gibt es neue Fragen!');return}quizBegin(false)},
+  quizPractice(){quizBegin(true)},
+  quizAns(el){quizAnswer(+el.dataset.i)},
+  quizNext(){quizNext()},
+  quizBack(){Q=null;showTop()},
   mergeDrive(){pushModal(credsModal('Mit Google Drive zusammenführen','Benutzername und Passwort, mit denen die Daten in Google Drive angelegt wurden (also beim ersten Einrichten).',resolveConflict))},
   driveOff(){if(!confirm('Verbindung zu Google Drive trennen? Die Daten in Drive bleiben erhalten.'))return;Drive.set({on:false,token:null,exp:0,fileId:null});Drive.status='';ui.open='drive';render()},
   export(){downloadBlob()},
@@ -896,7 +1076,7 @@ document.addEventListener('click',e=>{
   if(el.tagName==='BUTTON'&&el.type==='submit'&&el.form)return;
   const f=ACT[el.dataset.act];if(f){e.preventDefault();f(el,e)}
 });
-$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')popModal()});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal'){quizAbort();popModal()}});
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.out){const o=document.getElementById(t.dataset.out);if(o)o.textContent=t.value}});
 document.addEventListener('toggle',e=>{const d=e.target;if(d.tagName==='DETAILS'&&d.dataset.sec){if(d.open)ui.open=d.dataset.sec;else if(ui.open===d.dataset.sec)ui.open=null}},true);
 
