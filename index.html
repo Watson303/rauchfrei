@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Rauchfrei">
 <title>Rauchfrei</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root{--bg:#f3f6f4;--card:#fff;--ink:#16221c;--muted:#5f6d66;--line:#dfe6e2;--acc:#1d8a5a;--acc2:#e6f3ec;--a:#2b78b8;--b:#d4613a;--sos:#d64545;--warm:#fff1e6;--shadow:0 1px 3px rgba(0,0,0,.07),0 4px 14px rgba(0,0,0,.04);color-scheme:light}
 @media (prefers-color-scheme:dark){:root{--bg:#0f1512;--card:#18211c;--ink:#e6eee9;--muted:#9aa9a1;--line:#2a3630;--acc:#36a873;--acc2:#1b2d24;--a:#62a8e2;--b:#ec875f;--sos:#e05a5a;--warm:#33261d;--shadow:none;color-scheme:dark}}
@@ -161,7 +164,7 @@ svg text{fill:var(--muted);font-size:10px;font-family:inherit}
 /* ============ Einstellungen ============ */
 // Hier kann die Client-ID aus dem Google-Cloud-Projekt fest eingetragen werden.
 // Bleibt sie leer, kann man sie in der App unter „Mehr → Google Drive“ eintragen.
-const GOOGLE_CLIENT_ID = '';
+const GOOGLE_CLIENT_ID = '663949454194-uvp8nkc63rptnpkpnkbh8r7u8a9m5lje.apps.googleusercontent.com';
 const FILE_NAME = 'rauchfrei-daten.json';
 const ITER = 300000;
 const LS = {blob:'rf_blob', key:'rf_key', me:'rf_me', drive:'rf_drive'};
@@ -919,6 +922,7 @@ document.addEventListener('submit',e=>{const f=e.target,h=FORMS[f.dataset.form];
 /* ============ Laufzeit ============ */
 setInterval(()=>{if(S&&ui.tab==='start'&&!document.hidden&&$('#modal').hidden)render()},30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S){if(ui.tab==='start'&&$('#modal').hidden)render();if(Drive.on()&&Drive.valid())sync(false)}});
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 boot();
 </script>
 </body>
