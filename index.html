@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1d8a5a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rauchfrei">
+<title>Rauchfrei</title>
+<style>
+:root{--bg:#f3f6f4;--card:#fff;--ink:#16221c;--muted:#5f6d66;--line:#dfe6e2;--acc:#1d8a5a;--acc2:#e6f3ec;--a:#2b78b8;--b:#d4613a;--sos:#d64545;--warm:#fff1e6;--shadow:0 1px 3px rgba(0,0,0,.07),0 4px 14px rgba(0,0,0,.04);color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1512;--card:#18211c;--ink:#e6eee9;--muted:#9aa9a1;--line:#2a3630;--acc:#36a873;--acc2:#1b2d24;--a:#62a8e2;--b:#ec875f;--sos:#e05a5a;--warm:#33261d;--shadow:none;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+body.noscroll{overflow:hidden}
+[hidden]{display:none!important}
+header.top{position:sticky;top:0;z-index:5;background:var(--acc);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
+header.top h1{font-size:19px;margin:0;flex:1}
+.hbtn{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:9px;padding:6px 10px;font-size:14px;font-weight:600}
+.hbtn.err{background:#f6c344;color:#3a2a00}
+main{max-width:640px;margin:0 auto;padding:14px 16px calc(92px + env(safe-area-inset-bottom))}
+nav.bottom{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav.bottom button{flex:1;background:none;border:0;padding:8px 0 7px;color:var(--muted);font-size:11.5px;display:flex;flex-direction:column;align-items:center;gap:1px;font-family:inherit}
+nav.bottom .i{font-size:21px;line-height:1.2}
+nav.bottom button.on{color:var(--acc);font-weight:700}
+.card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);border:1px solid var(--line)}
+h2{font-size:18px;margin:0 0 10px}
+h3{font-size:16px;margin:16px 0 6px}
+p{margin:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:13.5px}
+.center{text-align:center}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stack>*+*{margin-top:8px}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:11px 14px;font-size:16px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;text-align:center}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--sos)}
+.btn.big{padding:14px;font-size:17px}
+.btn:disabled{opacity:.55}
+.link{background:none;border:0;color:var(--acc);font-size:15px;font-weight:600;padding:8px 0;cursor:pointer;font-family:inherit}
+.link.danger{color:var(--sos)}
+.sos{display:block;width:100%;border:0;border-radius:16px;padding:18px;background:linear-gradient(135deg,var(--sos),#b8326a);color:#fff;font-size:20px;font-weight:700;box-shadow:0 6px 18px rgba(214,69,69,.28);margin-bottom:14px;font-family:inherit;cursor:pointer}
+.sos small{display:block;font-weight:500;font-size:13.5px;opacity:.92}
+.quote{font-size:16px;font-style:italic;text-align:center;padding:14px 16px}
+.quote::before{content:"Spruch des Tages";display:block;font-style:normal;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.pgrid{display:grid;gap:14px;grid-template-columns:1fr;margin-bottom:14px}
+@media(min-width:560px){.pgrid{grid-template-columns:1fr 1fr}}
+.pcard{border-top:5px solid var(--pc);margin:0}
+.ph{display:flex;align-items:center;gap:8px;font-size:17px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--pc);flex:none}
+.tag{font-size:11px;background:var(--acc2);color:var(--acc);border-radius:6px;padding:1px 6px;font-weight:700}
+.bigt{font-size:25px;font-weight:800;margin-top:6px;letter-spacing:-.01em}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.kpis div{background:var(--acc2);border-radius:10px;padding:8px 4px;text-align:center}
+.kpis b{display:block;font-size:16px}
+.kpis span{font-size:11.5px;color:var(--muted)}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--pc,var(--acc));border-radius:6px}
+.bar.thick{height:16px;border-radius:9px}
+.cheer{background:var(--warm);border-color:transparent}
+.cheer .t{font-size:17px;font-weight:600;margin:4px 0 10px}
+label{display:block;font-size:14px;font-weight:600;margin:12px 0 0}
+input,select,textarea{display:block;width:100%;margin-top:4px;padding:11px;font-size:16px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-family:inherit}
+textarea{resize:vertical}
+input[type=checkbox],input[type=radio]{width:20px;height:20px;display:inline-block;margin:0 8px 0 0;vertical-align:middle;accent-color:var(--acc)}
+input[type=range]{padding:0;border:0;background:none;accent-color:var(--acc);height:32px}
+label.chk{font-weight:500;display:flex;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{margin:0;position:relative;font-weight:500}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip span{display:inline-block;padding:7px 12px;border-radius:20px;border:1px solid var(--line);font-size:14px;background:var(--bg)}
+.chip input:checked+span{background:var(--acc);color:#fff;border-color:var(--acc)}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:3px;gap:3px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:none;padding:8px 4px;border-radius:8px;font-size:14px;color:var(--ink);font-weight:600;font-family:inherit}
+.seg button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));position:relative}
+@media(min-width:600px){.modal{align-items:center}.sheet{border-radius:18px}}
+.x{position:absolute;right:6px;top:6px;border:0;background:none;font-size:30px;line-height:1;color:var(--muted);width:44px;height:44px;cursor:pointer}
+.sheet h2{padding-right:36px}
+.cd{font-size:44px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;color:var(--sos)}
+.reason{background:var(--warm);border-radius:12px;padding:12px;margin:12px 0}
+.tip{background:var(--acc2);border-radius:12px;padding:12px;margin:12px 0}
+.breathwrap{height:250px;display:flex;align-items:center;justify-content:center}
+.circle{width:230px;height:230px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#8fdcb3,var(--acc));transform:scale(.42);box-shadow:0 0 40px rgba(29,138,90,.35)}
+.bt{font-size:24px;font-weight:700;text-align:center;min-height:34px}
+.mem{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:340px;margin:12px auto}
+.mem button{aspect-ratio:1;border-radius:12px;border:0;font-size:32px;background:var(--acc);color:transparent;cursor:pointer;transition:background .15s}
+.mem button.open,.mem button.done{background:var(--acc2);color:inherit}
+.mem button.done{opacity:.55}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:10px}
+.badge{text-align:center;padding:10px 6px;border-radius:12px;background:var(--acc2);font-size:12.5px;font-weight:600}
+.badge .e{font-size:30px;display:block;line-height:1.3}
+.badge .d{font-weight:400;color:var(--muted);font-size:11.5px}
+.badge.off{background:var(--bg);opacity:.45;filter:grayscale(1)}
+.hl{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.hl:last-child{border-bottom:0}
+.hl .ic{width:28px;height:28px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:var(--line);font-size:14px;font-weight:700;color:var(--muted)}
+.hl.ok .ic{background:var(--acc);color:#fff}
+.hl b{display:block}
+.entry{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.entry:last-child{border-bottom:0}
+.entry .body{flex:1;min-width:0}
+.entry .del{background:none;border:0;color:var(--muted);font-size:22px;width:36px;height:36px;cursor:pointer}
+.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:10px;font-weight:600}
+.pill.ok{background:var(--acc2);color:var(--acc)}
+.pill.no{background:var(--warm);color:var(--b)}
+.dayh{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:14px 0 0;font-weight:700}
+.hbar{display:flex;align-items:center;gap:8px;font-size:14px;margin:5px 0}
+.hbar span:first-child{width:118px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar .bar{flex:1;margin:0}
+.hbar b{width:26px;text-align:right}
+.legend{display:flex;gap:14px;font-size:13px;margin-top:6px}
+.legend span{display:flex;align-items:center;gap:5px}
+details.card>summary{font-weight:700;font-size:17px;cursor:pointer;list-style:none;display:flex;justify-content:space-between}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:"›";transform:rotate(90deg);transition:transform .15s;color:var(--muted)}
+details.card[open]>summary::after{transform:rotate(-90deg)}
+.rlist{list-style:none;padding:0;margin:8px 0}
+.rlist li{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:9px;margin-bottom:6px}
+.rlist li span{flex:1}
+.rlist button{background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer}
+.msg{min-height:1.4em;margin-top:10px;color:var(--sos);font-size:14.5px}
+.msg.ok{color:var(--acc)}
+.authbox{max-width:430px;margin:0 auto;padding:28px 16px 40px}
+.logo{font-size:52px;text-align:center}
+.authbox h1{text-align:center;margin:2px 0 4px;font-size:26px}
+.authlinks{display:flex;flex-direction:column;align-items:center;margin-top:16px}
+.hint{background:var(--warm);border-radius:12px;padding:12px;font-size:14px}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1e2622;color:#fff;padding:11px 16px;border-radius:11px;font-size:14.5px;z-index:40;max-width:92vw;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center}
+#toast.show{opacity:1}
+svg text{fill:var(--muted);font-size:10px;font-family:inherit}
+</style>
+</head>
+<body>
+
+<div id="auth" hidden></div>
+
+<div id="app" hidden>
+  <header class="top"><h1>🌱 Rauchfrei</h1><button id="syncbtn" class="hbtn" data-act="syncNow" hidden>☁️</button></header>
+  <main id="view"></main>
+  <nav class="bottom">
+    <button data-act="tab" data-tab="start"><span class="i">🏠</span>Start</button>
+    <button data-act="tab" data-tab="diary"><span class="i">📓</span>Tagebuch</button>
+    <button data-act="tab" data-tab="stats"><span class="i">📊</span>Statistik</button>
+    <button data-act="tab" data-tab="wins"><span class="i">🏆</span>Erfolge</button>
+    <button data-act="tab" data-tab="more"><span class="i">☰</span>Mehr</button>
+  </nav>
+</div>
+
+<div id="modal" class="modal" hidden><div class="sheet"><button class="x" data-act="close" aria-label="Schließen">×</button><div id="mbody"></div></div></div>
+<div id="toast"></div>
+<input type="file" id="filein" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+/* ============ Einstellungen ============ */
+// Hier kann die Client-ID aus dem Google-Cloud-Projekt fest eingetragen werden.
+// Bleibt sie leer, kann man sie in der App unter „Mehr → Google Drive“ eintragen.
+const GOOGLE_CLIENT_ID = '';
+const FILE_NAME = 'rauchfrei-daten.json';
+const ITER = 300000;
+const LS = {blob:'rf_blob', key:'rf_key', me:'rf_me', drive:'rf_drive'};
+
+/* ============ Inhalte ============ */
+const QUOTES = [
+ 'Jeder rauchfreie Tag ist ein Geschenk an dich selbst.',
+ 'Das Verlangen kommt in Wellen – und jede Welle geht vorbei.',
+ 'Du gibst nichts auf. Du gewinnst etwas dazu.',
+ 'Heute zählt nur heute.',
+ 'Zu zweit ist jeder Schritt leichter.',
+ 'Deine Lunge sagt danke – mit jedem Atemzug.',
+ 'Stark ist, wer weitermacht, auch wenn es schwer ist.',
+ 'Ein Ausrutscher ist kein Ende, sondern ein Teil des Wegs.',
+ 'Jede Zigarette, die du nicht rauchst, ist ein kleiner Sieg.',
+ 'Freiheit riecht besser.',
+ 'Das Geld, das ihr spart, gehört eurem Traum.',
+ 'Du bist stärker als jede Zigarette.',
+ 'Ein paar Minuten durchhalten – dann ist das Schlimmste vorbei.',
+ 'Gewohnheiten kann man ändern. Ihr seid gerade dabei.',
+ 'Atme tief durch – die Luft gehört jetzt ganz dir.',
+ 'Nicht perfekt sein. Dranbleiben.',
+ 'Ihr seid ein Team. Auch heute.',
+ 'Der beste Zeitpunkt aufzuhören war gestern. Der zweitbeste ist jetzt.',
+ 'Mit jedem Tag wird es ein bisschen leichter.',
+ 'Belohne dich für das, was du schaffst.',
+ 'Du musst nicht für immer stark sein – nur für den nächsten Moment.',
+ 'Dein Körper repariert sich gerade. Lass ihn machen.',
+ 'Ein Tag nach dem anderen.',
+ 'Jeder Morgen ohne Zigarette ist ein Neuanfang.',
+ 'Sag dem anderen, wie es dir geht – geteilte Last ist halbe Last.',
+ 'Rauchfrei ist ein Weg, kein Sprung.',
+ 'Ihr habt schon so viel geschafft. Weiter so!',
+ 'Das Verlangen ist nur ein Gedanke. Du entscheidest, was du tust.',
+ 'Stolz sein ist erlaubt – jeden Tag.',
+ 'Kleine Schritte bringen euch genauso ans Ziel.'
+];
+const TIPS = [
+ 'Trink langsam ein großes Glas Wasser.',
+ 'Putz dir die Zähne – der frische Geschmack hilft.',
+ 'Geh ein paar Minuten an die frische Luft.',
+ 'Kau einen Kaugummi oder lutsch ein Bonbon.',
+ 'Beschäftige deine Hände: Stift, Knetball, Handyspiel.',
+ 'Mach die Atemübung – 90 Sekunden reichen oft.',
+ 'Schreib {p} eine Nachricht oder ruf kurz an.',
+ 'Iss etwas Knackiges: Karotte, Apfel, Gurke.',
+ 'Wechsle den Ort – raus aus der Situation, in der du sonst rauchst.',
+ 'Mach 10 Kniebeugen oder geh einmal die Treppe hoch und runter.',
+ 'Denk an euer Sparziel und wie nah ihr schon dran seid.',
+ 'Zähl langsam von 100 rückwärts.',
+ 'Lies deine persönlichen Gründe noch einmal.',
+ 'Sag dir: Ich warte nur 5 Minuten. Danach entscheide ich neu.',
+ 'Hör ein Lied, das dir gute Laune macht.',
+ 'Räum schnell eine Schublade auf – Ablenkung mit Ergebnis.'
+];
+const TRIGGERS = ['Kaffee','Nach dem Essen','Stress','Alkohol','Langeweile','Pause','Andere rauchen','Auto fahren','Ärger','Müdigkeit','Sonstiges'];
+const CHEERS = ['Du schaffst das! 💪','Ich bin stolz auf dich ❤️','Halt durch – das Verlangen geht vorbei!','Wir zwei packen das zusammen!','Denk an unser Sparziel 🎯','Schon wieder ein Tag geschafft – super! 🌱'];
+const H=36e5, D=864e5;
+const HEALTH = [
+ {ms:20*6e4, label:'20 Minuten', title:'Puls und Blutdruck normalisieren sich', text:'Herzschlag und Blutdruck sinken wieder in Richtung Normalwerte.'},
+ {ms:12*H, label:'12 Stunden', title:'Kohlenmonoxid ist abgebaut', text:'Der Kohlenmonoxidwert im Blut ist normal, der Sauerstoff steigt.'},
+ {ms:24*H, label:'1 Tag', title:'Das Herz wird entlastet', text:'Mehr Sauerstoff im Blut, das Herz muss weniger arbeiten.'},
+ {ms:48*H, label:'2 Tage', title:'Geschmack und Geruch werden besser', text:'Die Nervenenden erholen sich, Essen schmeckt wieder intensiver.'},
+ {ms:72*H, label:'3 Tage', title:'Atmen fällt leichter', text:'Die Bronchien entspannen sich, das Nikotin ist weitgehend abgebaut.'},
+ {ms:14*D, label:'2 Wochen', title:'Kreislauf kommt in Schwung', text:'Durchblutung und Lungenfunktion verbessern sich (2 bis 12 Wochen).'},
+ {ms:30*D, label:'1 Monat', title:'Weniger Husten', text:'Husten und Kurzatmigkeit nehmen ab, die Flimmerhärchen erholen sich.'},
+ {ms:90*D, label:'3 Monate', title:'Mehr Ausdauer', text:'Die Lungenfunktion ist deutlich besser, Bewegung fällt leichter.'},
+ {ms:270*D, label:'9 Monate', title:'Lunge reinigt sich besser', text:'Weniger Infekte, die Lunge kann Schleim besser abtransportieren.'},
+ {ms:365*D, label:'1 Jahr', title:'Herzrisiko halbiert', text:'Das Risiko für Herzkrankheiten ist etwa halb so hoch wie bei Rauchern.'},
+ {ms:5*365*D, label:'5 Jahre', title:'Schlaganfallrisiko sinkt deutlich', text:'Das Risiko für einige Krebsarten (Mund, Rachen, Speiseröhre) halbiert sich.'},
+ {ms:10*365*D, label:'10 Jahre', title:'Lungenkrebsrisiko halbiert', text:'Das Lungenkrebsrisiko ist etwa halb so hoch wie bei Rauchern.'},
+ {ms:15*365*D, label:'15 Jahre', title:'Herz wie bei Nichtrauchern', text:'Das Risiko für Herzkrankheiten ist etwa so niedrig wie bei Nichtrauchern.'}
+];
+const BADGES = [
+ {e:'🌱',t:'Erster Tag',d:'1 Tag rauchfrei',f:c=>c.days>=1},
+ {e:'🌿',t:'Drei Tage',d:'3 Tage rauchfrei',f:c=>c.days>=3},
+ {e:'🍀',t:'Eine Woche',d:'7 Tage rauchfrei',f:c=>c.days>=7},
+ {e:'⭐',t:'Zwei Wochen',d:'14 Tage rauchfrei',f:c=>c.days>=14},
+ {e:'🏅',t:'Ein Monat',d:'30 Tage rauchfrei',f:c=>c.days>=30},
+ {e:'🥈',t:'Drei Monate',d:'90 Tage rauchfrei',f:c=>c.days>=90},
+ {e:'🥇',t:'Halbes Jahr',d:'180 Tage rauchfrei',f:c=>c.days>=180},
+ {e:'🏆',t:'Ein Jahr',d:'365 Tage rauchfrei',f:c=>c.days>=365},
+ {e:'💶',t:'Erste 10 €',d:'10 € gespart',f:c=>c.money>=10},
+ {e:'💰',t:'50 €',d:'50 € gespart',f:c=>c.money>=50},
+ {e:'💸',t:'100 €',d:'100 € gespart',f:c=>c.money>=100},
+ {e:'🏦',t:'500 €',d:'500 € gespart',f:c=>c.money>=500},
+ {e:'💎',t:'1.000 €',d:'1.000 € gespart',f:c=>c.money>=1000},
+ {e:'🛡️',t:'Widerstanden',d:'1× Verlangen besiegt',f:c=>c.resisted>=1},
+ {e:'💪',t:'Standhaft',d:'10× widerstanden',f:c=>c.resisted>=10},
+ {e:'🦸',t:'Held',d:'50× widerstanden',f:c=>c.resisted>=50},
+ {e:'📓',t:'Tagebuch',d:'10 Einträge',f:c=>c.diary>=10},
+ {e:'🫁',t:'Durchatmen',d:'Erste Atemübung',f:c=>c.breaths>=1},
+ {e:'🧘',t:'Ruhepol',d:'10 Atemübungen',f:c=>c.breaths>=10},
+ {e:'🧩',t:'Abgelenkt',d:'Erstes Spiel gelöst',f:c=>c.games>=1},
+ {e:'💌',t:'Mutmacher',d:'Erste Nachricht',f:c=>c.cheers>=1},
+ {e:'📣',t:'Fan-Club',d:'10 Nachrichten',f:c=>c.cheers>=10}
+];
+const TEAM_BADGES = [
+ {e:'🤝',t:'Team-Woche',d:'Beide 7 Tage rauchfrei',f:(a,b,g)=>a.days>=7&&b.days>=7},
+ {e:'👫',t:'Team-Monat',d:'Beide 30 Tage rauchfrei',f:(a,b,g)=>a.days>=30&&b.days>=30},
+ {e:'🎈',t:'Halbzeit',d:'Halbes Sparziel erreicht',f:(a,b,g)=>g.amount>0&&a.money+b.money>=g.amount/2},
+ {e:'🎯',t:'Sparziel',d:'Sparziel erreicht',f:(a,b,g)=>g.amount>0&&a.money+b.money>=g.amount},
+ {e:'🏝️',t:'Team-Jahr',d:'Beide 1 Jahr rauchfrei',f:(a,b,g)=>a.days>=365&&b.days>=365}
+];
+
+/* ============ Hilfsfunktionen ============ */
+const $ = s => document.querySelector(s);
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const eur = n => new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n||0);
+const num = n => new Intl.NumberFormat('de-DE').format(Math.round(n||0));
+const fmtDate = ts => new Date(ts).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+const fmtTime = ts => new Date(ts).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+const fmtDay = ts => new Date(ts).toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+const toLocalInput = ts => {const d=new Date(ts);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+const fromLocalInput = s => new Date(s).getTime();
+const pnum = v => {const n=parseFloat(String(v).replace(',','.'));return isFinite(n)?n:0};
+const pick = a => a[Math.floor(Math.random()*a.length)];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+let toastT; function toast(t,ms){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),ms||3200)}
+
+/* ============ Verschlüsselung ============ */
+const enc=new TextEncoder(), dec=new TextDecoder();
+function b64(u8){let s='';for(let i=0;i<u8.length;i+=8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+8000));return btoa(s)}
+function ub64(s){const b=atob(s),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
+async function deriveKey(user,pw,salt,it){
+  const km=await crypto.subtle.importKey('raw',enc.encode(user.trim().toLowerCase()+'\n'+pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:ub64(salt),iterations:it||ITER,hash:'SHA-256'},km,{name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+}
+async function encryptState(key,salt,obj){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(obj)));
+  return {app:'rauchfrei',v:1,salt,it:ITER,iv:b64(iv),mod:Date.now(),data:b64(new Uint8Array(ct))};
+}
+async function decryptBlob(key,blob){
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(blob.iv)},key,ub64(blob.data));
+  return JSON.parse(dec.decode(pt));
+}
+async function saveKey(key,salt){const raw=await crypto.subtle.exportKey('raw',key);lsSet(LS.key,JSON.stringify({s:salt,k:b64(new Uint8Array(raw))}))}
+function getBlob(){try{const b=JSON.parse(lsGet(LS.blob)||'null');return b&&b.data&&b.salt?b:null}catch(e){return null}}
+const newSalt = () => b64(crypto.getRandomValues(new Uint8Array(16)));
+
+/* ============ Daten ============ */
+let S = null; // {key, salt, state}
+const ui = {tab:'start', filter:'all', winsWho:null};
+const me = () => lsGet(LS.me)==='b'?'b':'a';
+const other = k => k==='a'?'b':'a';
+const P = k => S.state.people[k];
+
+function person(name){return {name, quit:Date.now(), perDay:20, packPrice:8.5, packSize:20, reasons:[], set:false, u:Date.now()}}
+function newState(a,b){return {v:1, people:{a:person(a),b:person(b)}, goal:{name:'Gemeinsamer Urlaub',amount:1500,u:Date.now()}, cravings:[], cheers:[], events:[], seen:{a:[],b:[]}, deleted:[]}}
+function normalize(st){
+  st.people=st.people||{};
+  ['a','b'].forEach(k=>{st.people[k]=Object.assign(person(k==='a'?'Person 1':'Person 2'),st.people[k]||{});if(!Array.isArray(st.people[k].reasons))st.people[k].reasons=[]});
+  st.goal=st.goal||{name:'Gemeinsames Ziel',amount:1000,u:0};
+  ['cravings','cheers','events','deleted'].forEach(f=>{if(!Array.isArray(st[f]))st[f]=[]});
+  st.seen=st.seen||{};st.seen.a=st.seen.a||[];st.seen.b=st.seen.b||[];
+  return st;
+}
+function newer(x,y){if(!x)return y;if(!y)return x;return (y.u||0)>(x.u||0)?y:x}
+function unionById(a,b,del){const m=new Map();[...(a||[]),...(b||[])].forEach(o=>{if(o&&o.id&&!del.has(o.id))m.set(o.id,o)});return [...m.values()].sort((x,y)=>x.t-y.t)}
+function merge(L,R){
+  L=normalize(L);R=normalize(R);
+  const del=new Set([...L.deleted,...R.deleted]);
+  return {v:1,
+    people:{a:newer(L.people.a,R.people.a),b:newer(L.people.b,R.people.b)},
+    goal:newer(L.goal,R.goal),
+    cravings:unionById(L.cravings,R.cravings,del),
+    cheers:unionById(L.cheers,R.cheers,del),
+    events:unionById(L.events,R.events,del),
+    seen:{a:[...new Set([...L.seen.a,...R.seen.a])],b:[...new Set([...L.seen.b,...R.seen.b])]},
+    deleted:[...del]};
+}
+async function persist(){const blob=await encryptState(S.key,S.salt,S.state);lsSet(LS.blob,JSON.stringify(blob));scheduleSync()}
+async function commit(){render();try{await persist()}catch(e){toast('Speichern fehlgeschlagen: '+e.message)}}
+
+function calc(p){
+  const ms=Math.max(0,Date.now()-p.quit), days=ms/D;
+  const cigs=Math.floor(days*(p.perDay||0));
+  const money=p.packSize>0?cigs*(p.packPrice||0)/p.packSize:0;
+  return {ms,days,cigs,money,future:p.quit>Date.now()};
+}
+function ctx(k){
+  const st=S.state, cr=st.cravings.filter(c=>c.p===k);
+  return Object.assign(calc(st.people[k]),{
+    resisted:cr.filter(c=>c.resisted).length, diary:cr.length,
+    breaths:st.events.filter(e=>e.p===k&&e.type==='breath').length,
+    games:st.events.filter(e=>e.p===k&&e.type==='game').length,
+    cheers:st.cheers.filter(c=>c.from===k).length});
+}
+function fmtDur(ms){
+  const d=Math.floor(ms/D), h=Math.floor(ms%D/H), m=Math.floor(ms%H/6e4);
+  if(d>0) return `${d} ${d===1?'Tag':'Tage'}, ${h} Std.`;
+  return `${h} Std. ${m} Min.`;
+}
+function logEvent(type){S.state.events.push({id:uid(),p:me(),t:Date.now(),type});commit()}
+
+/* ============ Google Drive ============ */
+const Drive = {
+  cfg(){try{return JSON.parse(lsGet(LS.drive)||'{}')||{}}catch(e){return {}}},
+  set(o){lsSet(LS.drive,JSON.stringify(Object.assign(this.cfg(),o)))},
+  cid(){return GOOGLE_CLIENT_ID||this.cfg().cid||''},
+  on(){return !!this.cfg().on},
+  valid(){const c=this.cfg();return !!(c.token&&Date.now()<(c.exp||0)-60000)},
+  status:'', busy:false,
+  load(){
+    if(window.google&&google.accounts&&google.accounts.oauth2) return Promise.resolve();
+    if(this._lp) return this._lp;
+    this._lp=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.onload=()=>res();s.onerror=()=>{this._lp=null;rej(new Error('Google-Anmeldung konnte nicht geladen werden (Internet?)'))};document.head.appendChild(s)});
+    return this._lp;
+  },
+  async auth(interactive){
+    if(this.valid()) return this.cfg().token;
+    if(!interactive) throw new Error('Anmeldung bei Google nötig – tippe auf ☁️');
+    if(!this.cid()) throw new Error('Bitte zuerst die Google Client-ID eintragen (Mehr → Google Drive).');
+    await this.load();
+    return new Promise((res,rej)=>{
+      const tc=google.accounts.oauth2.initTokenClient({client_id:this.cid(),scope:'https://www.googleapis.com/auth/drive.file',
+        callback:r=>{if(r.error){rej(new Error('Google: '+r.error));return}this.set({token:r.access_token,exp:Date.now()+(+r.expires_in||3600)*1000,on:true});res(r.access_token)},
+        error_callback:e=>rej(new Error(e&&e.type==='popup_closed'?'Anmeldung abgebrochen':'Google-Anmeldung fehlgeschlagen'))});
+      tc.requestAccessToken({prompt:this.on()?'':'consent'});
+    });
+  },
+  async api(url,opt){
+    opt=opt||{};
+    const r=await fetch(url,Object.assign({},opt,{headers:Object.assign({},opt.headers||{},{Authorization:'Bearer '+this.cfg().token})}));
+    if(r.status===401){this.set({token:null,exp:0});throw new Error('Google-Anmeldung abgelaufen – tippe auf ☁️')}
+    if(r.status===404&&opt.allow404) return null;
+    if(!r.ok) throw new Error('Google Drive meldet Fehler '+r.status);
+    return r;
+  },
+  async findFile(){
+    const c=this.cfg(); if(c.fileId) return c.fileId;
+    const q=encodeURIComponent(`name='${FILE_NAME}' and trashed=false`);
+    const r=await this.api('https://www.googleapis.com/drive/v3/files?spaces=drive&orderBy=modifiedTime%20desc&fields=files(id)&q='+q);
+    const j=await r.json(); const id=j.files&&j.files[0]&&j.files[0].id;
+    if(id) this.set({fileId:id}); return id||null;
+  },
+  async download(){
+    const id=await this.findFile(); if(!id) return null;
+    const r=await this.api('https://www.googleapis.com/drive/v3/files/'+id+'?alt=media',{allow404:true});
+    if(!r){this.set({fileId:null});return this.download()}
+    return r.json();
+  },
+  async upload(blob){
+    const id=await this.findFile(), body=JSON.stringify(blob);
+    if(id){
+      const r=await this.api('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body,allow404:true});
+      if(r) return; this.set({fileId:null});
+    }
+    const bnd='rf'+Date.now(), meta={name:FILE_NAME,mimeType:'application/json'};
+    const mp=`--${bnd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${bnd}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${bnd}--`;
+    const r=await this.api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bnd},body:mp});
+    const j=await r.json(); this.set({fileId:j.id});
+  }
+};
+let syncT=null;
+function scheduleSync(fast){if(!Drive.on()||!Drive.valid())return updateSyncBtn();clearTimeout(syncT);syncT=setTimeout(()=>sync(false),fast?300:2500)}
+async function sync(interactive,opts){
+  opts=opts||{};
+  if(!S||Drive.busy) return;
+  if(!Drive.on()&&!interactive) return;
+  Drive.busy=true; Drive.status='Abgleich läuft …'; updateSyncBtn();
+  try{
+    await Drive.auth(interactive);
+    if(!opts.pushOnly){
+      const remote=await Drive.download();
+      if(remote){
+        if(remote.salt!==S.salt) throw Object.assign(new Error('In Google Drive liegen Daten mit anderen Zugangsdaten. Wurden Benutzername/Passwort auf dem anderen Handy geändert? Dann abmelden und über „Neueste Daten aus Google Drive holen“ neu anmelden.'),{hard:true});
+        let rs; try{rs=await decryptBlob(S.key,remote)}catch(e){throw new Error('Die Daten in Google Drive lassen sich mit euren Zugangsdaten nicht öffnen.')}
+        S.state=merge(S.state,rs);
+      }
+    }
+    const blob=await encryptState(S.key,S.salt,S.state);
+    lsSet(LS.blob,JSON.stringify(blob));
+    await Drive.upload(blob);
+    Drive.set({last:Date.now()}); Drive.status='Abgeglichen um '+fmtTime(Date.now());
+    if(interactive) toast('Mit Google Drive abgeglichen ✓');
+    render();
+  }catch(e){Drive.status=e.message; if(interactive||e.hard) toast(e.message,6000); updateSyncBtn(); if(ui.tab==='more') render();}
+  finally{Drive.busy=false;updateSyncBtn()}
+}
+function updateSyncBtn(){
+  const b=$('#syncbtn'); if(!b) return;
+  b.hidden=!Drive.on();
+  b.classList.toggle('err',Drive.on()&&!Drive.valid());
+  b.textContent=Drive.busy?'⏳':(Drive.valid()?'☁️ ✓':'☁️ !');
+  b.title=Drive.status||'';
+}
+
+/* ============ Modal ============ */
+const M={stack:[],timers:[]};
+function clearTimers(){M.timers.forEach(t=>{clearInterval(t);clearTimeout(t)});M.timers=[]}
+function pushModal(m){M.stack.push(m);showTop()}
+function showTop(){
+  clearTimers();
+  const m=M.stack[M.stack.length-1];
+  if(!m){$('#modal').hidden=true;document.body.classList.remove('noscroll');return}
+  $('#modal').hidden=false;document.body.classList.add('noscroll');
+  $('#mbody').innerHTML=m.html(); $('.sheet').scrollTop=0;
+  if(m.init) m.init();
+}
+function popModal(){M.stack.pop();showTop()}
+function closeAll(){M.stack=[];showTop()}
+
+/* ============ Anmeldung ============ */
+function showAuth(note){
+  $('#app').hidden=true; const a=$('#auth'); a.hidden=false;
+  const blob=getBlob();
+  a.innerHTML = `<div class="authbox"><div class="logo">🌱</div><h1>Rauchfrei</h1><p class="center muted">Gemeinsam rauchfrei werden.<br>Eure Daten sind mit eurem Passwort verschlüsselt.</p>` +
+  (blob ? `
+   <div class="card" style="margin-top:18px"><form data-form="login">
+    <label>Benutzername<input name="u" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
+    <label>Passwort<input name="p" type="password" autocomplete="current-password" required></label>
+    <label class="chk"><input type="checkbox" name="keep" checked>Auf diesem Gerät angemeldet bleiben</label>
+    <button class="btn primary big" style="margin-top:14px">Anmelden</button>
+    <div class="msg ${note?'ok':''}" id="amsg">${esc(note||'')}</div></form></div>
+   <div class="authlinks">
+    <button class="link" data-act="authDrive">Neueste Daten aus Google Drive holen</button>
+    <button class="link" data-act="authImport">Sicherungsdatei laden</button>
+    <button class="link danger" data-act="authReset">Auf diesem Gerät neu anfangen</button></div>`
+  : `
+   <div class="card" style="margin-top:18px"><h2>Neu einrichten</h2>
+   <p class="small muted">Legt einen gemeinsamen Benutzernamen und ein Passwort fest. Beides wird nirgends gespeichert – nur eure Daten werden damit verschlüsselt. Ohne Passwort kommt niemand an die Daten, auch ihr nicht. Also gut merken!</p>
+   <form data-form="setup">
+    <label>Benutzername<input name="u" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
+    <label>Passwort (mind. 10 Zeichen)<input name="p" type="password" autocomplete="new-password" minlength="10" required></label>
+    <label>Passwort wiederholen<input name="p2" type="password" autocomplete="new-password" required></label>
+    <div class="two"><label>Name 1<input name="na" value="Christoffer" required></label><label>Name 2<input name="nb" value="Ariane" required></label></div>
+    <label>Wer benutzt dieses Handy?</label>
+    <div class="chips"><label class="chip"><input type="radio" name="me" value="a" checked><span>Name 1</span></label><label class="chip"><input type="radio" name="me" value="b"><span>Name 2</span></label></div>
+    <label class="chk" style="margin-top:12px"><input type="checkbox" name="keep" checked>Auf diesem Gerät angemeldet bleiben</label>
+    <button class="btn primary big" style="margin-top:14px">Los geht's</button>
+    <div class="msg" id="amsg">${esc(note||'')}</div></form></div>
+   <div class="card"><h2>Schon auf dem anderen Handy eingerichtet?</h2>
+    <div class="stack"><button class="btn" data-act="authDrive">☁️ Daten aus Google Drive holen</button><button class="btn" data-act="authImport">💾 Sicherungsdatei laden</button></div></div>`) + `</div>`;
+}
+const amsg=(t,ok)=>{const m=$('#amsg');if(m){m.textContent=t;m.className='msg'+(ok?' ok':'')}};
+
+async function startApp(key,salt,state){
+  S={key,salt,state:normalize(state)};
+  $('#auth').hidden=true; $('#auth').innerHTML=''; $('#app').hidden=false;
+  ui.tab='start'; render();
+  if(!lsGet(LS.me)) pushModal(chooseMeModal());
+  if(Drive.on()){Drive.load().catch(()=>{}); if(Drive.valid()) sync(false); else {Drive.status='Anmeldung bei Google nötig – tippe auf ☁️';updateSyncBtn()}}
+}
+async function boot(){
+  if(!(window.crypto&&crypto.subtle)){document.body.innerHTML='<div class="authbox"><h1>Rauchfrei</h1><p>Dieser Browser kann die Verschlüsselung nicht nutzen. Bitte die App über https öffnen (z. B. GitHub Pages).</p></div>';return}
+  const blob=getBlob();
+  if(blob){
+    try{const sk=JSON.parse(lsGet(LS.key)||'null');
+      if(sk&&sk.s===blob.salt){const key=await crypto.subtle.importKey('raw',ub64(sk.k),'AES-GCM',true,['encrypt','decrypt']);const st=await decryptBlob(key,blob);return startApp(key,blob.salt,st)}
+    }catch(e){lsDel(LS.key)}
+  }
+  showAuth();
+}
+function logout(){lsDel(LS.key);S=null;closeAll();showAuth('Abgemeldet.')}
+
+/* ============ Ansichten ============ */
+function render(){
+  if(!S) return;
+  $('#view').innerHTML=(VIEWS[ui.tab]||VIEWS.start)();
+  document.querySelectorAll('nav.bottom button').forEach(b=>b.classList.toggle('on',b.dataset.tab===ui.tab));
+  updateSyncBtn();
+}
+function personCard(k){
+  const p=P(k), c=ctx(k);
+  const idx=HEALTH.findIndex(h=>h.ms>c.ms), next=HEALTH[idx];
+  const prevMs=idx>0?HEALTH[idx-1].ms:0;
+  const pct=next?Math.min(100,(c.ms-prevMs)/(next.ms-prevMs)*100):100;
+  return `<div class="card pcard" style="--pc:var(--${k})">
+   <div class="ph"><span class="dot"></span><b>${esc(p.name)}</b>${k===me()?'<span class="tag">DU</span>':''}</div>
+   ${c.future?`<div class="bigt">Start am ${fmtDate(p.quit)}</div><div class="small muted">um ${fmtTime(p.quit)} Uhr</div>`
+     :`<div class="bigt">${fmtDur(c.ms)}</div><div class="small muted">rauchfrei seit ${fmtDate(p.quit)}, ${fmtTime(p.quit)} Uhr</div>`}
+   <div class="kpis"><div><b>${num(c.cigs)}</b><span>nicht geraucht</span></div><div><b>${eur(c.money)}</b><span>gespart</span></div><div><b>${c.resisted}×</b><span>widerstanden</span></div></div>
+   ${next?`<div class="small">Nächstes Ziel in ${fmtDur(next.ms-c.ms)}: <b>${esc(next.title)}</b></div><div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div>`:'<div class="small"><b>Alle Gesundheitsziele erreicht! 🎉</b></div>'}
+  </div>`;
+}
+const VIEWS = {
+ start(){
+  const st=S.state, k=me(), o=other(k);
+  const doy=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/D);
+  const unseen=st.cheers.filter(c=>c.to===k&&!st.seen[k].includes(c.id));
+  const a=calc(P('a')), b=calc(P('b')), total=a.money+b.money, g=st.goal;
+  const gp=g.amount>0?Math.min(100,total/g.amount*100):0;
+  return `
+   ${unseen.map(c=>`<div class="card cheer"><div class="small muted">💌 Nachricht von ${esc(P(c.from).name)} · ${fmtDate(c.t)} ${fmtTime(c.t)}</div><div class="t">${esc(c.text)}</div><button class="btn" data-act="seen" data-id="${c.id}">❤️ Danke!</button></div>`).join('')}
+   ${!P(k).set?`<div class="card hint"><b>Erste Schritte:</b> Trag unter <b>Mehr → Einstellungen</b> deinen Rauchstopp, Zigaretten pro Tag und den Schachtelpreis ein. Dann stimmen alle Zahlen.<div style="margin-top:8px"><button class="btn" data-act="goSettings">Zu den Einstellungen</button></div></div>`:''}
+   <button class="sos" data-act="sos">🆘 Ich habe gerade Verlangen<small>Hilfe für die nächsten Minuten</small></button>
+   <div class="card quote">${esc(QUOTES[doy%QUOTES.length])}</div>
+   <div class="pgrid">${personCard(k)}${personCard(o)}</div>
+   <div class="card"><div class="row"><b>🎯 ${esc(g.name)}</b><span class="small">${eur(total)} / ${eur(g.amount)}</span></div>
+    <div class="bar thick"><i style="width:${gp.toFixed(1)}%"></i></div>
+    <div class="small muted" style="margin-top:6px">${g.amount>0&&total>=g.amount?'Ziel erreicht – gönnt es euch! 🎉':'Noch '+eur(Math.max(0,g.amount-total))+' bis zum Ziel. Zusammen spart ihr '+eur((pnum(P('a').perDay)*pnum(P('a').packPrice)/(P('a').packSize||20))+(pnum(P('b').perDay)*pnum(P('b').packPrice)/(P('b').packSize||20)))+' pro Tag.'}</div></div>
+   <button class="btn big" data-act="cheer">💌 ${esc(P(o).name)} anfeuern</button>`;
+ },
+
+ diary(){
+  const st=S.state, k=me();
+  let list=st.cravings.slice().sort((x,y)=>y.t-x.t);
+  if(ui.filter!=='all') list=list.filter(c=>c.p===ui.filter);
+  let lastDay='', rows='';
+  list.slice(0,150).forEach(c=>{
+    const day=new Date(c.t).toDateString();
+    if(day!==lastDay){rows+=`<div class="dayh">${fmtDay(c.t)}</div>`;lastDay=day}
+    rows+=`<div class="entry"><span class="dot" style="--pc:var(--${c.p});margin-top:7px"></span><div class="body">
+      <div><b>${fmtTime(c.t)}</b> · ${esc(P(c.p).name)} · ${'●'.repeat(c.i||0)}${'○'.repeat(5-(c.i||0))}</div>
+      <div class="small">${c.trigger?esc(c.trigger)+' · ':''}<span class="pill ${c.resisted?'ok':'no'}">${c.resisted?'widerstanden':'geraucht'}</span></div>
+      ${c.note?`<div class="small muted">${esc(c.note)}</div>`:''}</div>
+      <button class="del" data-act="delEntry" data-id="${c.id}" aria-label="Löschen">×</button></div>`;
+  });
+  return `<div class="card"><h2>📓 Neuer Eintrag</h2>
+   <p class="small muted">Wann kam das Verlangen und warum? So erkennt ihr eure Auslöser.</p>
+   <form data-form="entry">
+    <div class="two"><label>Wer<select name="p"><option value="a"${k==='a'?' selected':''}>${esc(P('a').name)}</option><option value="b"${k==='b'?' selected':''}>${esc(P('b').name)}</option></select></label>
+    <label>Wann<input type="datetime-local" name="t" value="${toLocalInput(Date.now())}" required></label></div>
+    <label>Wie stark? <span id="dI">3</span> von 5<input type="range" name="i" min="1" max="5" value="3" data-out="dI"></label>
+    <label>Auslöser</label><div class="chips">${TRIGGERS.map(t=>`<label class="chip"><input type="radio" name="tr" value="${esc(t)}"><span>${esc(t)}</span></label>`).join('')}</div>
+    <label>Notiz (optional)<textarea name="note" rows="2" maxlength="500" placeholder="Was war los? Wie hast du dich gefühlt?"></textarea></label>
+    <label>Ergebnis</label><div class="chips"><label class="chip"><input type="radio" name="res" value="1" checked><span>✅ widerstanden</span></label><label class="chip"><input type="radio" name="res" value="0"><span>geraucht</span></label></div>
+    <button class="btn primary" style="margin-top:14px">Speichern</button></form></div>
+   <div class="card"><h2>Einträge</h2>
+    <div class="seg"><button data-act="filter" data-f="all" class="${ui.filter==='all'?'on':''}">Alle</button><button data-act="filter" data-f="a" class="${ui.filter==='a'?'on':''}">${esc(P('a').name)}</button><button data-act="filter" data-f="b" class="${ui.filter==='b'?'on':''}">${esc(P('b').name)}</button></div>
+    ${rows||'<p class="muted small">Noch keine Einträge. Tipp: Auch der 🆘-Knopf trägt hier automatisch ein.</p>'}</div>`;
+ },
+
+ stats(){
+  const st=S.state;
+  if(!st.cravings.length) return `<div class="card"><h2>📊 Statistik</h2><p class="muted">Sobald ihr Verlangen im Tagebuch oder über den 🆘-Knopf eintragt, seht ihr hier, wie es mit der Zeit weniger wird.</p></div>`;
+  const ws=t=>{const d=new Date(t);d.setHours(0,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return d.getTime()};
+  const cur=ws(Date.now()), weeks=[];
+  for(let i=7;i>=0;i--){const d=new Date(cur);d.setDate(d.getDate()-7*i);weeks.push(d.getTime())}
+  const cnt={a:weeks.map(()=>0),b:weeks.map(()=>0)};
+  st.cravings.forEach(c=>{const i=weeks.indexOf(ws(c.t));if(i>=0)cnt[c.p][i]++});
+  let max=Math.max(2,...cnt.a,...cnt.b); if(max%2) max++;
+  const W=340,Hh=170,L=26,B=24,T=10,cw=(W-L-4)/8,bw=Math.min(14,cw/2-3);
+  let svg=`<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="Verlangen pro Woche">`;
+  [0,.5,1].forEach(f=>{const y=T+(Hh-T-B)*(1-f);svg+=`<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" style="stroke:var(--line)"/><text x="${L-5}" y="${y+3}" text-anchor="end">${Math.round(max*f)}</text>`});
+  weeks.forEach((w,i)=>{const x=L+i*cw+cw/2;['a','b'].forEach((k,j)=>{const v=cnt[k][i],h=(Hh-T-B)*v/max;if(v)svg+=`<rect x="${x+(j?1:-bw-1)}" y="${Hh-B-h}" width="${bw}" height="${h}" rx="3" style="fill:var(--${k})"><title>${esc(P(k).name)}: ${v}</title></rect>`});
+    const d=new Date(w);svg+=`<text x="${x}" y="${Hh-8}" text-anchor="middle">${d.getDate()}.${d.getMonth()+1}.</text>`});
+  svg+='</svg>';
+  const per=k=>{
+    const cr=st.cravings.filter(c=>c.p===k); if(!cr.length) return `<div class="card"><h2 style="color:var(--${k})">${esc(P(k).name)}</h2><p class="small muted">Noch keine Einträge.</p></div>`;
+    const res=cr.filter(c=>c.resisted).length, now=Date.now();
+    const avg=a=>a.length?(a.reduce((s,c)=>s+(c.i||0),0)/a.length).toFixed(1).replace('.',','):'–';
+    const w1=cr.filter(c=>c.t>now-7*D), w2=cr.filter(c=>c.t<=now-7*D&&c.t>now-14*D);
+    const tr={};cr.forEach(c=>{if(c.trigger)tr[c.trigger]=(tr[c.trigger]||0)+1});
+    const top=Object.entries(tr).sort((x,y)=>y[1]-x[1]).slice(0,5), tmax=top.length?top[0][1]:1;
+    const slots=[['Morgens',5,11],['Mittags',11,14],['Nachmittags',14,18],['Abends',18,22],['Nachts',22,29]];
+    const sc=slots.map(([n,f,t])=>[n,cr.filter(c=>{let h=new Date(c.t).getHours();if(h<5)h+=24;return h>=f&&h<t}).length]);
+    const smax=Math.max(1,...sc.map(s=>s[1]));
+    return `<div class="card" style="--pc:var(--${k})"><h2 style="color:var(--${k})">${esc(P(k).name)}</h2>
+     <div class="kpis"><div><b>${cr.length}</b><span>Einträge</span></div><div><b>${Math.round(res/cr.length*100)} %</b><span>widerstanden</span></div><div><b>${w1.length}</b><span>letzte 7 Tage${w2.length?` (davor ${w2.length})`:''}</span></div></div>
+     <div class="small">Durchschnittliche Stärke: <b>${avg(w1)}</b> in den letzten 7 Tagen, davor <b>${avg(w2)}</b></div>
+     ${top.length?`<h3>Häufigste Auslöser</h3>${top.map(([t,n])=>`<div class="hbar"><span>${esc(t)}</span><div class="bar"><i style="width:${n/tmax*100}%"></i></div><b>${n}</b></div>`).join('')}`:''}
+     <h3>Tageszeit</h3>${sc.map(([n,v])=>`<div class="hbar"><span>${n}</span><div class="bar"><i style="width:${v/smax*100}%"></i></div><b>${v}</b></div>`).join('')}</div>`;
+  };
+  return `<div class="card"><h2>📊 Verlangen pro Woche</h2>${svg}
+   <div class="legend"><span><span class="dot" style="--pc:var(--a)"></span>${esc(P('a').name)}</span><span><span class="dot" style="--pc:var(--b)"></span>${esc(P('b').name)}</span></div>
+   <p class="small muted">Die Balken sollten mit der Zeit kleiner werden. 💪</p></div>${per(me())}${per(other(me()))}`;
+ },
+
+ wins(){
+  const k=ui.winsWho||me(), c=ctx(k), ca=ctx('a'), cb=ctx('b'), g=S.state.goal;
+  const got=BADGES.filter(b=>b.f(c)).length;
+  return `<div class="seg"><button data-act="winsWho" data-k="a" class="${k==='a'?'on':''}">${esc(P('a').name)}</button><button data-act="winsWho" data-k="b" class="${k==='b'?'on':''}">${esc(P('b').name)}</button></div>
+   <div class="card"><h2>❤️ Gesundheit</h2><p class="small muted">Was im Körper passiert, wenn man aufhört (nach gängigen Angaben, z. B. der WHO).</p>
+   ${HEALTH.map(h=>{const ok=c.ms>=h.ms;return `<div class="hl ${ok?'ok':''}"><span class="ic">${ok?'✓':''}</span><div><b>${h.label}: ${esc(h.title)}</b><span class="small muted">${esc(h.text)}${ok?'':' · noch '+fmtDur(h.ms-c.ms)}</span></div></div>`}).join('')}</div>
+   <div class="card"><h2>🏅 Abzeichen <span class="small muted">(${got} von ${BADGES.length})</span></h2>
+   <div class="badges">${BADGES.map(b=>`<div class="badge ${b.f(c)?'':'off'}"><span class="e">${b.e}</span>${esc(b.t)}<div class="d">${esc(b.d)}</div></div>`).join('')}</div></div>
+   <div class="card"><h2>🤝 Team-Abzeichen</h2>
+   <div class="badges">${TEAM_BADGES.map(b=>`<div class="badge ${b.f(ca,cb,g)?'':'off'}"><span class="e">${b.e}</span>${esc(b.t)}<div class="d">${esc(b.d)}</div></div>`).join('')}</div></div>`;
+ },
+
+ more(){
+  const k=me(), o=other(k), st=S.state, g=st.goal, dc=Drive.cfg();
+  const pform=x=>{const p=P(x);return `<form data-form="person" data-k="${x}" style="--pc:var(--${x})"><h3 style="color:var(--${x})">${esc(p.name)}${x===k?' (du)':''}</h3>
+    <label>Name<input name="name" value="${esc(p.name)}" required></label>
+    <label>Rauchfrei seit<input type="datetime-local" name="quit" value="${toLocalInput(p.quit)}" required></label>
+    <div class="two"><label>Zigaretten pro Tag<input type="number" name="perDay" min="0" step="1" inputmode="numeric" value="${p.perDay}"></label>
+    <label>Preis pro Schachtel (€)<input type="number" name="packPrice" min="0" step="0.01" inputmode="decimal" value="${p.packPrice}"></label></div>
+    <label>Zigaretten pro Schachtel<input type="number" name="packSize" min="1" step="1" inputmode="numeric" value="${p.packSize}"></label>
+    <div class="two" style="margin-top:12px"><button class="btn primary">Speichern</button><button type="button" class="btn ghost" data-act="restart" data-k="${x}">Neu starten</button></div></form>`};
+  return `
+   <div class="two" style="margin-bottom:14px"><button class="btn big" data-act="breath">🫁 Atemübung</button><button class="btn big" data-act="game">🧩 Spiel</button></div>
+   <details class="card" ${ui.open==='reasons'?'open':''} data-sec="reasons"><summary>💡 Meine Gründe</summary>
+    <p class="small muted">Warum hörst du auf? Deine Gründe erscheinen, wenn du den 🆘-Knopf drückst.</p>
+    <ul class="rlist">${P(k).reasons.map((r,i)=>`<li><span>${esc(r)}</span><button data-act="delReason" data-i="${i}" aria-label="Entfernen">×</button></li>`).join('')||'<li class="muted"><span>Noch keine Gründe eingetragen.</span></li>'}</ul>
+    <form data-form="reason" class="row"><input name="r" maxlength="200" placeholder="z. B. Länger fit bleiben" required style="margin:0"><button class="btn primary" style="width:auto">+</button></form>
+    ${P(o).reasons.length?`<h3>Gründe von ${esc(P(o).name)}</h3><ul class="rlist">${P(o).reasons.map(r=>`<li><span>${esc(r)}</span></li>`).join('')}</ul>`:''}
+   </details>
+   <details class="card" ${ui.open==='goal'?'open':''} data-sec="goal"><summary>🎯 Sparziel</summary>
+    <form data-form="goal"><label>Wofür spart ihr?<input name="name" value="${esc(g.name)}" required></label>
+    <label>Betrag (€)<input type="number" name="amount" min="1" step="1" inputmode="numeric" value="${g.amount}" required></label>
+    <button class="btn primary" style="margin-top:12px">Speichern</button></form></details>
+   <details class="card" ${ui.open==='settings'?'open':''} data-sec="settings"><summary>⚙️ Einstellungen</summary>
+    ${pform(k)}${pform(o)}
+    <p class="small muted" style="margin-top:12px">„Neu starten“ setzt den Rauchstopp auf jetzt – falls es mal nicht geklappt hat. Kein Weltuntergang!</p>
+    <h3>Dieses Handy gehört</h3>
+    <div class="seg"><button data-act="setMe" data-k="a" class="${k==='a'?'on':''}">${esc(P('a').name)}</button><button data-act="setMe" data-k="b" class="${k==='b'?'on':''}">${esc(P('b').name)}</button></div>
+   </details>
+   <details class="card" ${ui.open==='drive'?'open':''} data-sec="drive"><summary>☁️ Google Drive</summary>
+    <p class="small">Damit eure beiden Handys dieselben Daten haben, Nachrichten ankommen und nichts verloren geht. In Google Drive liegt nur eine verschlüsselte Datei („${FILE_NAME}“) – ohne euer Passwort ist sie unlesbar.</p>
+    <p class="small"><b>Wichtig:</b> Meldet euch auf beiden Handys mit <b>demselben Google-Konto</b> an.</p>
+    ${GOOGLE_CLIENT_ID?'':`<form data-form="cid"><label>Google Client-ID<input name="cid" value="${esc(dc.cid||'')}" placeholder="…apps.googleusercontent.com" autocapitalize="none" autocorrect="off" spellcheck="false"></label><button class="btn" style="margin-top:8px">Client-ID speichern</button></form>`}
+    <p class="small"><b>Status:</b> ${Drive.on()?esc(Drive.status||(Drive.valid()?'Verbunden':'Anmeldung nötig')):'Nicht verbunden'}${dc.last?' · zuletzt '+fmtDate(dc.last)+' '+fmtTime(dc.last):''}</p>
+    <div class="stack">${Drive.on()?`<button class="btn primary" data-act="syncNow">Jetzt abgleichen</button><button class="btn ghost" data-act="driveOff">Verbindung trennen</button>`:`<button class="btn primary" data-act="syncNow">Mit Google Drive verbinden</button>`}</div>
+   </details>
+   <details class="card" ${ui.open==='backup'?'open':''} data-sec="backup"><summary>💾 Sicherung</summary>
+    <p class="small muted">Die Sicherungsdatei ist ebenfalls verschlüsselt. Zum Einspielen braucht ihr Benutzername und Passwort, mit denen sie gemacht wurde.</p>
+    <div class="stack"><button class="btn" data-act="export">Sicherung herunterladen</button><button class="btn" data-act="import">Sicherung einspielen</button></div></details>
+   <details class="card" ${ui.open==='security'?'open':''} data-sec="security"><summary>🔒 Zugang</summary>
+    <form data-form="pw"><p class="small muted">Neuen Benutzernamen und neues Passwort festlegen. Auf dem anderen Handy müsst ihr euch danach neu anmelden.</p>
+     <label>Neuer Benutzername<input name="u" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
+     <label>Neues Passwort (mind. 10 Zeichen)<input name="p" type="password" autocomplete="new-password" minlength="10" required></label>
+     <label>Passwort wiederholen<input name="p2" type="password" autocomplete="new-password" required></label>
+     <button class="btn" style="margin-top:12px">Zugang ändern</button></form>
+    <button class="btn danger" style="margin-top:12px" data-act="logout">Abmelden</button></details>
+   <p class="center small muted">Rauchfrei · Daten verschlüsselt auf diesem Gerät${Drive.on()?' und in Google Drive':''}</p>`;
+ }
+};
+
+/* ============ Modals ============ */
+function chooseMeModal(){return {html:()=>`<h2>Wer benutzt dieses Handy?</h2><p class="small muted">Damit die App weiß, wer „du“ bist. Lässt sich später unter Einstellungen ändern.</p>
+  <div class="stack"><button class="btn big" data-act="setMe" data-k="a" data-close="1">${esc(P('a').name)}</button><button class="btn big" data-act="setMe" data-k="b" data-close="1">${esc(P('b').name)}</button></div>`}}
+
+let sosStart=0, sosTip='';
+function sosModal(){
+  const k=me(), p=P(k);
+  const reason=p.reasons.length?pick(p.reasons):null;
+  return {
+    html:()=>`<h2>Halte durch, ${esc(p.name)}! 💪</h2>
+     <div class="cd" id="cd">5:00</div>
+     <p class="small muted center" id="cdt">Das Verlangen lässt meist nach wenigen Minuten nach. Bleib dran!</p>
+     ${reason?`<div class="reason">❤️ <b>Dein Grund:</b><br>${esc(reason)}</div>`:`<div class="reason small">Tipp: Unter <b>Mehr → Meine Gründe</b> kannst du aufschreiben, warum du aufhörst. Die erscheinen dann hier.</div>`}
+     <div class="tip"><b>Probier das:</b> <span id="tipTxt">${esc(sosTip)}</span><br><button class="link" data-act="newTip">Anderer Tipp ↻</button></div>
+     <div class="two"><button class="btn" data-act="breath">🫁 Atmen</button><button class="btn" data-act="game">🧩 Spiel</button></div>
+     <button class="btn ghost" style="margin-top:8px" data-act="askHelp">💬 ${esc(P(other(k)).name)} Bescheid geben</button>
+     <h3>Wie stark ist das Verlangen? <span id="sI">3</span> von 5</h3><input type="range" id="sosI" min="1" max="5" value="3" data-out="sI">
+     <div class="chips">${TRIGGERS.map(t=>`<label class="chip"><input type="radio" name="sosT" value="${esc(t)}"><span>${esc(t)}</span></label>`).join('')}</div>
+     <div class="two" style="margin-top:16px"><button class="btn primary" data-act="sosDone" data-r="1">✅ Geschafft!</button><button class="btn ghost" data-act="sosDone" data-r="0">Leider geraucht</button></div>`,
+    init(){
+      const tick=()=>{const left=Math.max(0,300000-(Date.now()-sosStart)),el=$('#cd');if(!el)return;
+        el.textContent=Math.floor(left/6e4)+':'+String(Math.floor(left%6e4/1000)).padStart(2,'0');
+        if(left===0){el.textContent='🎉';$('#cdt').textContent='5 Minuten geschafft! Wie sieht es jetzt aus?'}};
+      tick(); M.timers.push(setInterval(tick,1000));
+    }
+  };
+}
+function tipText(){return pick(TIPS).replace('{p}',P(other(me())).name)}
+
+function breathModal(){
+  return {html:()=>`<h2>🫁 Atemübung</h2><p class="small muted">4 Sekunden einatmen · 4 Sekunden halten · 6 Sekunden ausatmen. 6 Runden, gut 1½ Minuten.</p>
+    <div class="breathwrap"><div class="circle" id="bc"></div></div>
+    <div class="bt" id="bt">Bereit?</div><div class="small muted center" id="br">&nbsp;</div>
+    <button class="btn primary" id="bstart" data-act="breathStart" style="margin-top:12px">Starten</button>`};
+}
+function breathStart(){
+  const seq=[];for(let r=0;r<6;r++)seq.push(['Einatmen',4,1],['Halten',4,1],['Ausatmen',6,.42]);
+  const bc=$('#bc'),bt=$('#bt'),br=$('#br'),bs=$('#bstart');bs.hidden=true;
+  let i=-1,left=0;
+  const next=()=>{i++;if(i>=seq.length){clearTimers();bt.textContent='Gut gemacht! 🌿';br.textContent='Wie fühlst du dich jetzt?';bs.hidden=false;bs.textContent='Nochmal';logEvent('breath');return}
+    const [l,s,sc]=seq[i];left=s;bc.style.transition=`transform ${s}s ease-in-out`;bc.style.transform=`scale(${sc})`;bt.textContent=`${l} … ${left}`;br.textContent=`Runde ${Math.floor(i/3)+1} von 6`};
+  next();
+  M.timers.push(setInterval(()=>{left--;if(left<=0)next();else bt.textContent=`${seq[i][0]} … ${left}`},1000));
+}
+
+let G=null;
+function gameNew(){const em=['🍎','🌿','🌊','🌞','🚲','⭐','🎈','🦋'];G={deck:shuffle([...em,...em]).map(e=>({e,open:false,done:false})),first:-1,lock:false,moves:0,pairs:0,start:Date.now()}}
+function gameModal(){gameNew();return {html:()=>`<h2>🧩 Memory</h2><p class="small muted">Finde alle Paare. Das lenkt ab, bis das Verlangen vorbei ist.</p><div class="mem" id="mem"></div><div class="center small" id="gstat"></div><div id="gagain"></div>`,init:renderMem}}
+function renderMem(){
+  const m=$('#mem');if(!m)return;
+  m.innerHTML=G.deck.map((c,i)=>`<button class="${c.done?'done':c.open?'open':''}" data-act="flip" data-i="${i}" aria-label="Karte">${c.e}</button>`).join('');
+  $('#gstat').textContent=`Züge: ${G.moves} · Paare: ${G.pairs} von 8`;
+}
+function flip(i){
+  const c=G.deck[i];if(G.lock||c.open||c.done)return;
+  c.open=true;
+  if(G.first<0){G.first=i;renderMem();return}
+  G.moves++;const f=G.deck[G.first];
+  if(f.e===c.e){f.done=c.done=true;G.pairs++;G.first=-1;renderMem();
+    if(G.pairs===8){const s=Math.round((Date.now()-G.start)/1000);$('#gstat').textContent=`Geschafft in ${G.moves} Zügen und ${s} Sekunden! 🎉`;$('#gagain').innerHTML='<button class="btn primary" data-act="gameAgain" style="margin-top:10px">Nochmal spielen</button>';logEvent('game')}
+  }else{G.lock=true;renderMem();M.timers.push(setTimeout(()=>{f.open=c.open=false;G.first=-1;G.lock=false;renderMem()},850))}
+}
+
+function cheerModal(){
+  const k=me(), o=other(k);
+  return {html:()=>{
+    const recent=S.state.cheers.filter(c=>c.from===k).slice(-4).reverse();
+    return `<h2>💌 ${esc(P(o).name)} anfeuern</h2>
+     <div class="stack">${CHEERS.map(t=>`<button class="btn ghost" data-act="sendCheer" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+     <form data-form="cheer"><label>Eigene Nachricht<textarea name="t" rows="2" maxlength="300" required></textarea></label><button class="btn primary" style="margin-top:8px">Senden</button></form>
+     <p class="small muted">${Drive.on()?`Kommt beim nächsten Abgleich auf ${esc(P(o).name)}s Handy an.`:`Ohne Google Drive sieht ${esc(P(o).name)} die Nachricht nur auf diesem Handy.`}</p>
+     ${recent.length?`<h3>Zuletzt gesendet</h3>${recent.map(c=>`<div class="small">${fmtDate(c.t)} ${fmtTime(c.t)} – ${esc(c.text)} ${S.state.seen[o].includes(c.id)?'✓ gelesen':''}</div>`).join('')}`:''}`;
+  }};
+}
+function sendCheer(text){
+  const k=me();
+  S.state.cheers.push({id:uid(),from:k,to:other(k),text:String(text).slice(0,300),t:Date.now()});
+  commit(); scheduleSync(true);
+  toast(`Nachricht an ${P(other(k)).name} gesendet 💌`);
+}
+
+function credsModal(title,note,onOk){
+  return {html:()=>`<h2>${esc(title)}</h2><p class="small muted">${esc(note)}</p><form data-form="creds">
+    <label>Benutzername<input name="u" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
+    <label>Passwort<input name="p" type="password" required></label>
+    <button class="btn primary" style="margin-top:12px">OK</button><div class="msg" id="cmsg"></div></form>`, onOk};
+}
+function cidModal(after){
+  return {html:()=>`<h2>Google Client-ID</h2><p class="small muted">Die Client-ID aus eurem Google-Cloud-Projekt (endet auf „.apps.googleusercontent.com“). Dieselbe wie beim Außendienstassistenten.</p>
+    <form data-form="cidModal"><input name="cid" value="${esc(Drive.cfg().cid||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" required><button class="btn primary" style="margin-top:10px">Weiter</button></form>`, after};
+}
+
+/* ============ Dateien ============ */
+let fileCb=null;
+function chooseFile(cb){fileCb=cb;const f=$('#filein');f.value='';f.click()}
+$('#filein').addEventListener('change',e=>{const file=e.target.files[0];if(!file||!fileCb)return;const r=new FileReader();r.onload=()=>{let j=null;try{j=JSON.parse(r.result)}catch(x){}const cb=fileCb;fileCb=null;if(!j||j.app!=='rauchfrei'||!j.data||!j.salt){toast('Das ist keine Rauchfrei-Sicherung.');return}cb(j)};r.readAsText(file)});
+function downloadBlob(){
+  const blob=getBlob();if(!blob)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(blob)],{type:'application/json'}));
+  a.download='rauchfrei-sicherung-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+  toast('Sicherung heruntergeladen');
+}
+async function importIntoSession(j){
+  try{
+    let key=S.key;
+    if(j.salt!==S.salt){
+      pushModal(credsModal('Sicherung öffnen','Diese Sicherung wurde mit anderen Zugangsdaten gemacht. Bitte die damaligen Zugangsdaten eingeben.',async(u,p)=>{
+        const k2=await deriveKey(u,p,j.salt,j.it);const st=await decryptBlob(k2,j);
+        S.state=merge(S.state,st);closeAll();await commit();toast('Sicherung eingespielt ✓')}));
+      return;
+    }
+    const st=await decryptBlob(key,j);S.state=merge(S.state,st);await commit();toast('Sicherung eingespielt ✓');
+  }catch(e){toast('Sicherung konnte nicht geöffnet werden.')}
+}
+
+/* ============ Aktionen ============ */
+const ACT = {
+  tab(el){ui.tab=el.dataset.tab;render();window.scrollTo(0,0)},
+  close(){popModal()},
+  goSettings(){ui.tab='more';ui.open='settings';render();window.scrollTo(0,0)},
+  sos(){sosStart=Date.now();sosTip=tipText();pushModal(sosModal())},
+  newTip(){sosTip=tipText();$('#tipTxt').textContent=sosTip},
+  sosDone(el){
+    const ok=el.dataset.r==='1', t=document.querySelector('input[name=sosT]:checked');
+    S.state.cravings.push({id:uid(),p:me(),t:Date.now(),i:+$('#sosI').value,trigger:t?t.value:'',note:'',resisted:ok});
+    closeAll();commit();
+    toast(ok?'Stark! 💪 Das war ein Sieg – ist im Tagebuch eingetragen.':'Kein Weltuntergang. Morgen ist ein neuer Tag – weiter geht\'s! 🌱',4500);
+  },
+  askHelp(){sendCheer('Ich hab gerade starkes Verlangen – denk an mich! 🙏')},
+  breath(){pushModal(breathModal())},
+  breathStart(){breathStart()},
+  game(){pushModal(gameModal())},
+  gameAgain(){gameNew();$('#gagain').innerHTML='';renderMem()},
+  flip(el){flip(+el.dataset.i)},
+  cheer(){pushModal(cheerModal())},
+  sendCheer(el){sendCheer(el.dataset.t);closeAll()},
+  seen(el){S.state.seen[me()].push(el.dataset.id);commit()},
+  filter(el){ui.filter=el.dataset.f;render()},
+  winsWho(el){ui.winsWho=el.dataset.k;render()},
+  delEntry(el){if(!confirm('Eintrag löschen?'))return;const id=el.dataset.id;S.state.cravings=S.state.cravings.filter(c=>c.id!==id);S.state.deleted.push(id);commit()},
+  delReason(el){const p=P(me());p.reasons.splice(+el.dataset.i,1);p.u=Date.now();ui.open='reasons';commit()},
+  setMe(el){lsSet(LS.me,el.dataset.k);if(el.dataset.close)closeAll();render()},
+  restart(el){const p=P(el.dataset.k);if(!confirm(`Rauchstopp für ${p.name} auf jetzt setzen?`))return;p.quit=Date.now();p.u=Date.now();ui.open='settings';commit();toast('Neuer Start – du schaffst das! 🌱')},
+  syncNow(){
+    if(!Drive.cid()){pushModal(cidModal(()=>sync(true)));return}
+    sync(true);
+  },
+  driveOff(){if(!confirm('Verbindung zu Google Drive trennen? Die Daten in Drive bleiben erhalten.'))return;Drive.set({on:false,token:null,exp:0,fileId:null});Drive.status='';ui.open='drive';render()},
+  export(){downloadBlob()},
+  import(){chooseFile(importIntoSession)},
+  logout(){if(confirm('Abmelden? Beim nächsten Öffnen braucht ihr Benutzername und Passwort.'))logout()},
+  authImport(){chooseFile(j=>{lsSet(LS.blob,JSON.stringify(j));lsDel(LS.key);showAuth('Sicherung geladen – jetzt anmelden.')})},
+  async authDrive(){
+    if(!Drive.cid()){pushModal(cidModal(()=>ACT.authDrive()));return}
+    if(getBlob()&&!confirm('Die Daten auf diesem Handy werden durch die aus Google Drive ersetzt. Weiter?'))return;
+    amsg('Verbinde mit Google …',true);
+    try{await Drive.auth(true);const j=await Drive.download();
+      if(!j){amsg('In Google Drive wurden noch keine Rauchfrei-Daten gefunden.');return}
+      lsSet(LS.blob,JSON.stringify(j));lsDel(LS.key);showAuth('Daten aus Google Drive geholt – jetzt anmelden.');
+    }catch(e){amsg(e.message)}
+  },
+  authReset(){if(!confirm('Alle Rauchfrei-Daten auf diesem Gerät löschen? (Google Drive und Sicherungsdateien bleiben unberührt.)'))return;if(!confirm('Wirklich löschen?'))return;[LS.blob,LS.key,LS.me].forEach(lsDel);showAuth()}
+};
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  if(el.tagName==='BUTTON'&&el.type==='submit'&&el.form)return;
+  const f=ACT[el.dataset.act];if(f){e.preventDefault();f(el,e)}
+});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')popModal()});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.out){const o=document.getElementById(t.dataset.out);if(o)o.textContent=t.value}});
+document.addEventListener('toggle',e=>{const d=e.target;if(d.tagName==='DETAILS'&&d.dataset.sec){if(d.open)ui.open=d.dataset.sec;else if(ui.open===d.dataset.sec)ui.open=null}},true);
+
+const FORMS = {
+  async login(f,fd){
+    const blob=getBlob();const btn=f.querySelector('button');btn.disabled=true;amsg('Prüfe Zugangsdaten …',true);
+    try{const key=await deriveKey(fd.get('u'),fd.get('p'),blob.salt,blob.it);const st=await decryptBlob(key,blob);
+      if(fd.get('keep'))await saveKey(key,blob.salt);else lsDel(LS.key);
+      startApp(key,blob.salt,st);
+    }catch(e){btn.disabled=false;amsg('Benutzername oder Passwort falsch.')}
+  },
+  async setup(f,fd){
+    const u=String(fd.get('u')).trim(),p=String(fd.get('p'));
+    if(!u){amsg('Bitte einen Benutzernamen eingeben.');return}
+    if(p.length<10){amsg('Das Passwort sollte mindestens 10 Zeichen haben.');return}
+    if(p!==fd.get('p2')){amsg('Die beiden Passwörter sind nicht gleich.');return}
+    const btn=f.querySelector('button');btn.disabled=true;amsg('Richte ein …',true);
+    const salt=newSalt(),key=await deriveKey(u,p,salt,ITER);
+    lsSet(LS.me,fd.get('me')==='b'?'b':'a');
+    S={key,salt,state:newState(String(fd.get('na')).trim()||'Person 1',String(fd.get('nb')).trim()||'Person 2')};
+    await persist();
+    if(fd.get('keep'))await saveKey(key,salt);else lsDel(LS.key);
+    startApp(key,salt,S.state);
+    ui.tab='more';ui.open='settings';render();
+    toast('Eingerichtet! Trag jetzt eure Angaben ein.',4000);
+  },
+  entry(f,fd){
+    const t=fromLocalInput(fd.get('t'));
+    S.state.cravings.push({id:uid(),p:fd.get('p')==='b'?'b':'a',t:isFinite(t)?t:Date.now(),i:+fd.get('i')||3,trigger:fd.get('tr')||'',note:String(fd.get('note')||'').trim(),resisted:fd.get('res')==='1'});
+    commit();toast(fd.get('res')==='1'?'Eingetragen – stark! 💪':'Eingetragen. Weiter geht\'s! 🌱');
+  },
+  person(f,fd){
+    const k=f.dataset.k,p=P(k),q=fromLocalInput(fd.get('quit'));
+    p.name=String(fd.get('name')).trim()||p.name; if(isFinite(q))p.quit=q;
+    p.perDay=Math.max(0,pnum(fd.get('perDay')));p.packPrice=Math.max(0,pnum(fd.get('packPrice')));p.packSize=Math.max(1,Math.round(pnum(fd.get('packSize'))||20));
+    p.set=true;p.u=Date.now();ui.open='settings';commit();toast('Gespeichert ✓');
+  },
+  goal(f,fd){S.state.goal={name:String(fd.get('name')).trim()||'Sparziel',amount:Math.max(1,pnum(fd.get('amount'))),u:Date.now()};ui.open='goal';commit();toast('Sparziel gespeichert ✓')},
+  reason(f,fd){const r=String(fd.get('r')).trim();if(!r)return;const p=P(me());p.reasons.push(r);p.u=Date.now();ui.open='reasons';commit()},
+  cheer(f,fd){const t=String(fd.get('t')).trim();if(!t)return;sendCheer(t);closeAll()},
+  cid(f,fd){Drive.set({cid:String(fd.get('cid')).trim()});ui.open='drive';render();toast('Client-ID gespeichert')},
+  cidModal(f,fd){const c=String(fd.get('cid')).trim();if(!c)return;Drive.set({cid:c});const m=M.stack[M.stack.length-1];popModal();if(m&&m.after)m.after()},
+  async creds(f,fd){const m=M.stack[M.stack.length-1];try{await m.onOk(fd.get('u'),fd.get('p'))}catch(e){const c=$('#cmsg');if(c)c.textContent='Benutzername oder Passwort falsch.'}},
+  async pw(f,fd){
+    const u=String(fd.get('u')).trim(),p=String(fd.get('p'));
+    if(p.length<10){toast('Das Passwort sollte mindestens 10 Zeichen haben.');return}
+    if(p!==fd.get('p2')){toast('Die beiden Passwörter sind nicht gleich.');return}
+    if(!confirm('Zugang wirklich ändern? Auf dem anderen Handy müsst ihr euch danach mit den neuen Daten anmelden.'))return;
+    if(Drive.on()&&Drive.valid()){await sync(false)}
+    const salt=newSalt(),key=await deriveKey(u,p,salt,ITER);
+    S.key=key;S.salt=salt;await persist();
+    if(lsGet(LS.key))await saveKey(key,salt);
+    if(Drive.on()&&Drive.valid())await sync(false,{pushOnly:true});
+    f.reset();toast('Zugang geändert ✓ Auf dem anderen Handy: „Neueste Daten aus Google Drive holen“ und neu anmelden.',7000);
+  }
+};
+document.addEventListener('submit',e=>{const f=e.target,h=FORMS[f.dataset.form];if(!h)return;e.preventDefault();h(f,new FormData(f))});
+
+/* ============ Laufzeit ============ */
+setInterval(()=>{if(S&&ui.tab==='start'&&!document.hidden&&$('#modal').hidden)render()},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S){if(ui.tab==='start'&&$('#modal').hidden)render();if(Drive.on()&&Drive.valid())sync(false)}});
+boot();
+</script>
+</body>
+</html>
