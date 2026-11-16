@@ -1,5 +1,5 @@
 // Rauchfrei – Offline-Speicher. Bei jeder neuen Version die Nummer erhöhen.
-const CACHE = 'rauchfrei-v2';
+const CACHE = 'rauchfrei-v5';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -12,7 +12,7 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || u.origin !== location.origin) return; // Google & Co. nie zwischenspeichern
   if (e.request.mode === 'navigate' || u.pathname.endsWith('.html') || u.pathname.endsWith('/')) {
     // Seite: erst aus dem Netz (damit Updates ankommen), offline aus dem Speicher
-    e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put('./index.html', c)); return r; })
+    e.respondWith(fetch(e.request.url, {cache: 'no-store'}).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put('./index.html', c)); return r; })
       .catch(() => caches.match('./index.html')));
     return;
   }

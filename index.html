@@ -165,6 +165,7 @@ svg text{fill:var(--muted);font-size:10px;font-family:inherit}
 // Hier kann die Client-ID aus dem Google-Cloud-Projekt fest eingetragen werden.
 // Bleibt sie leer, kann man sie in der App unter „Mehr → Google Drive“ eintragen.
 const GOOGLE_CLIENT_ID = '663949454194-uvp8nkc63rptnpkpnkbh8r7u8a9m5lje.apps.googleusercontent.com';
+const APP_VERSION = '1.4';
 const FILE_NAME = 'rauchfrei-daten.json';
 const ITER = 300000;
 const LS = {blob:'rf_blob', key:'rf_key', me:'rf_me', drive:'rf_drive'};
@@ -412,6 +413,14 @@ const Drive = {
     if(!r){this.set({fileId:null});return this.download()}
     return r.json();
   },
+  async deleteAll(){
+    const q=encodeURIComponent(`name='${FILE_NAME}' and trashed=false`);
+    const r=await this.api('https://www.googleapis.com/drive/v3/files?spaces=drive&fields=files(id)&q='+q);
+    const j=await r.json();
+    for(const f of (j.files||[])) await this.api('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE',allow404:true});
+    this.set({fileId:null});
+    return (j.files||[]).length;
+  },
   async upload(blob){
     const id=await this.findFile(), body=JSON.stringify(blob);
     if(id){
@@ -424,7 +433,17 @@ const Drive = {
     const j=await r.json(); this.set({fileId:j.id});
   }
 };
-let syncT=null;
+let syncT=null, driveConflict=null;
+async function resolveConflict(u,p){
+  const remote=driveConflict; if(!remote) return;
+  const key=await deriveKey(u,p,remote.salt,remote.it);
+  const rs=await decryptBlob(key,remote); // wirft bei falschen Zugangsdaten
+  const kept=!!lsGet(LS.key);
+  S.state=merge(rs,S.state); S.key=key; S.salt=remote.salt; driveConflict=null;
+  await persist(); if(kept) await saveKey(key,remote.salt);
+  closeAll(); render(); await sync(false);
+  toast('Zusammengeführt ✓ Ab jetzt gelten die Zugangsdaten aus Google Drive.',5000);
+}
 function scheduleSync(fast){if(!Drive.on()||!Drive.valid())return updateSyncBtn();clearTimeout(syncT);syncT=setTimeout(()=>sync(false),fast?300:2500)}
 async function sync(interactive,opts){
   opts=opts||{};
@@ -436,8 +455,9 @@ async function sync(interactive,opts){
     if(!opts.pushOnly){
       const remote=await Drive.download();
       if(remote){
-        if(remote.salt!==S.salt) throw Object.assign(new Error('In Google Drive liegen Daten mit anderen Zugangsdaten. Wurden Benutzername/Passwort auf dem anderen Handy geändert? Dann abmelden und über „Neueste Daten aus Google Drive holen“ neu anmelden.'),{hard:true});
-        let rs; try{rs=await decryptBlob(S.key,remote)}catch(e){throw new Error('Die Daten in Google Drive lassen sich mit euren Zugangsdaten nicht öffnen.')}
+        if(remote.salt!==S.salt){driveConflict=remote;throw Object.assign(new Error('Google Drive hat einen anderen Datenstand. Bitte unter Mehr → Google Drive zusammenführen.'),{hard:true})}
+        let rs; try{rs=await decryptBlob(S.key,remote)}catch(e){driveConflict=remote;throw Object.assign(new Error('Google Drive hat einen anderen Datenstand. Bitte unter Mehr → Google Drive zusammenführen.'),{hard:true})}
+        driveConflict=null;
         S.state=merge(S.state,rs);
       }
     }
@@ -453,8 +473,8 @@ async function sync(interactive,opts){
 function updateSyncBtn(){
   const b=$('#syncbtn'); if(!b) return;
   b.hidden=!Drive.on();
-  b.classList.toggle('err',Drive.on()&&!Drive.valid());
-  b.textContent=Drive.busy?'⏳':(Drive.valid()?'☁️ ✓':'☁️ !');
+  b.classList.toggle('err',Drive.on()&&(!Drive.valid()||!!driveConflict));
+  b.textContent=Drive.busy?'⏳':(Drive.valid()&&!driveConflict?'☁️ ✓':'☁️ !');
   b.title=Drive.status||'';
 }
 
@@ -465,7 +485,7 @@ function pushModal(m){M.stack.push(m);showTop()}
 function showTop(){
   clearTimers();
   const m=M.stack[M.stack.length-1];
-  if(!m){$('#modal').hidden=true;document.body.classList.remove('noscroll');return}
+  if(!m){$('#modal').hidden=true;document.body.classList.remove('noscroll');if(pendingReload)setTimeout(doReload,300);return}
   $('#modal').hidden=false;document.body.classList.add('noscroll');
   $('#mbody').innerHTML=m.html(); $('.sheet').scrollTop=0;
   if(m.init) m.init();
@@ -488,7 +508,7 @@ function showAuth(note){
    <div class="authlinks">
     <button class="link" data-act="authDrive">Neueste Daten aus Google Drive holen</button>
     <button class="link" data-act="authImport">Sicherungsdatei laden</button>
-    <button class="link danger" data-act="authReset">Auf diesem Gerät neu anfangen</button></div>`
+    <button class="link danger" data-act="authReset">Auf diesem Gerät neu anfangen</button>${Drive.on()?'<button class="link danger" data-act="wipeAll">Alles löschen, auch in Google Drive</button>':''}</div>`
   : `
    <div class="card" style="margin-top:18px"><h2>Neu einrichten</h2>
    <p class="small muted">Legt einen gemeinsamen Benutzernamen und ein Passwort fest. Beides wird nirgends gespeichert – nur eure Daten werden damit verschlüsselt. Ohne Passwort kommt niemand an die Daten, auch ihr nicht. Also gut merken!</p>
@@ -501,7 +521,7 @@ function showAuth(note){
     <div class="chips"><label class="chip"><input type="radio" name="me" value="a" checked><span>Name 1</span></label><label class="chip"><input type="radio" name="me" value="b"><span>Name 2</span></label></div>
     <label class="chk" style="margin-top:12px"><input type="checkbox" name="keep" checked>Auf diesem Gerät angemeldet bleiben</label>
     <button class="btn primary big" style="margin-top:14px">Los geht's</button>
-    <div class="msg" id="amsg">${esc(note||'')}</div></form></div>
+    <div class="msg ${note?'ok':''}" id="amsg">${esc(note||'')}</div></form></div>
    <div class="card"><h2>Schon auf dem anderen Handy eingerichtet?</h2>
     <div class="stack"><button class="btn" data-act="authDrive">☁️ Daten aus Google Drive holen</button><button class="btn" data-act="authImport">💾 Sicherungsdatei laden</button></div></div>`) + `</div>`;
 }
@@ -674,6 +694,7 @@ const VIEWS = {
     <p class="small"><b>Wichtig:</b> Meldet euch auf beiden Handys mit <b>demselben Google-Konto</b> an.</p>
     ${GOOGLE_CLIENT_ID?'':`<form data-form="cid"><label>Google Client-ID<input name="cid" value="${esc(dc.cid||'')}" placeholder="…apps.googleusercontent.com" autocapitalize="none" autocorrect="off" spellcheck="false"></label><button class="btn" style="margin-top:8px">Client-ID speichern</button></form>`}
     <p class="small"><b>Status:</b> ${Drive.on()?esc(Drive.status||(Drive.valid()?'Verbunden':'Anmeldung nötig')):'Nicht verbunden'}${dc.last?' · zuletzt '+fmtDate(dc.last)+' '+fmtTime(dc.last):''}</p>
+    ${driveConflict?`<div class="hint" style="margin:10px 0"><b>In Google Drive liegen Daten, die mit anderen Zugangsdaten angelegt wurden</b> – z. B. weil die App zweimal neu eingerichtet wurde. Gib die Zugangsdaten ein, mit denen die Daten in Google Drive angelegt wurden. Dann wird alles zusammengeführt, es geht nichts verloren.<button class="btn primary" style="margin-top:10px" data-act="mergeDrive">Jetzt zusammenführen</button><button class="btn danger" style="margin-top:8px" data-act="wipeAll">Oder: alles löschen und frisch anfangen</button></div>`:''}
     <div class="stack">${Drive.on()?`<button class="btn primary" data-act="syncNow">Jetzt abgleichen</button><button class="btn ghost" data-act="driveOff">Verbindung trennen</button>`:`<button class="btn primary" data-act="syncNow">Mit Google Drive verbinden</button>`}</div>
    </details>
    <details class="card" ${ui.open==='backup'?'open':''} data-sec="backup"><summary>💾 Sicherung</summary>
@@ -685,8 +706,11 @@ const VIEWS = {
      <label>Neues Passwort (mind. 10 Zeichen)<input name="p" type="password" autocomplete="new-password" minlength="10" required></label>
      <label>Passwort wiederholen<input name="p2" type="password" autocomplete="new-password" required></label>
      <button class="btn" style="margin-top:12px">Zugang ändern</button></form>
-    <button class="btn danger" style="margin-top:12px" data-act="logout">Abmelden</button></details>
-   <p class="center small muted">Rauchfrei · Daten verschlüsselt auf diesem Gerät${Drive.on()?' und in Google Drive':''}</p>`;
+    <button class="btn danger" style="margin-top:12px" data-act="logout">Abmelden</button>
+    <h3>Alles löschen</h3><p class="small muted">Löscht alle Rauchfrei-Daten auf diesem Handy${Drive.on()?' und die Datei in Google Drive':''}. Danach richtet ihr die App frisch ein.</p>
+    <button class="btn danger" data-act="wipeAll">🗑️ Alles löschen und neu anfangen</button></details>
+   <button class="btn ghost" data-act="checkUpdate">🔄 Nach Updates suchen</button>
+   <p class="center small muted">Rauchfrei · Version ${APP_VERSION} · Daten verschlüsselt auf diesem Gerät${Drive.on()?' und in Google Drive':''}</p>`;
  }
 };
 
@@ -839,6 +863,18 @@ const ACT = {
     if(!Drive.cid()){pushModal(cidModal(()=>sync(true)));return}
     sync(true);
   },
+  async wipeAll(){
+    if(!confirm('Wirklich ALLE Rauchfrei-Daten löschen – auf diesem Handy'+(Drive.on()?' und in Google Drive':'')+'? Das lässt sich nicht rückgängig machen.'))return;
+    if(!confirm('Ganz sicher? Danach richtet ihr die App komplett neu ein.'))return;
+    if(Drive.on()){
+      try{toast('Lösche in Google Drive …');await Drive.auth(true);await Drive.deleteAll()}
+      catch(e){toast('Google Drive konnte nicht gelöscht werden: '+e.message,6000);return}
+    }
+    [LS.blob,LS.key,LS.me].forEach(lsDel);driveConflict=null;S=null;closeAll();
+    showAuth('Alles gelöscht. Jetzt einmal neu einrichten.');
+  },
+  checkUpdate(){checkUpdate(true)},
+  mergeDrive(){pushModal(credsModal('Mit Google Drive zusammenführen','Benutzername und Passwort, mit denen die Daten in Google Drive angelegt wurden (also beim ersten Einrichten).',resolveConflict))},
   driveOff(){if(!confirm('Verbindung zu Google Drive trennen? Die Daten in Drive bleiben erhalten.'))return;Drive.set({on:false,token:null,exp:0,fileId:null});Drive.status='';ui.open='drive';render()},
   export(){downloadBlob()},
   import(){chooseFile(importIntoSession)},
@@ -922,7 +958,25 @@ document.addEventListener('submit',e=>{const f=e.target,h=FORMS[f.dataset.form];
 /* ============ Laufzeit ============ */
 setInterval(()=>{if(S&&ui.tab==='start'&&!document.hidden&&$('#modal').hidden)render()},30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S){if(ui.tab==='start'&&$('#modal').hidden)render();if(Drive.on()&&Drive.valid())sync(false)}});
-if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+/* ============ Updates ============ */
+let swReg=null, pendingReload=false;
+function busyNow(){const a=document.activeElement;return !$('#modal').hidden||(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.type!=='range')}
+function doReload(){try{sessionStorage.setItem('rf_updated','1')}catch(e){}location.reload()}
+function checkUpdate(manual){
+  if(!swReg){if(manual)toast('Updates gehen nur, wenn die App über die Internetadresse geöffnet ist.');return}
+  swReg.update().then(()=>{if(manual&&!swReg.installing&&!swReg.waiting)toast('Du hast die neueste Version ('+APP_VERSION+') ✓')}).catch(()=>{if(manual)toast('Keine Verbindung – später nochmal versuchen.')});
+}
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+  const hadCtrl=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{swReg=r;checkUpdate(false)}).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!hadCtrl)return; // erste Installation
+    if(busyNow()){pendingReload=true;toast('Neue Version geladen – wird gleich aktiviert.',4000)} else doReload();
+  });
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)return;if(pendingReload)return doReload();checkUpdate(false)});
+  document.addEventListener('focusout',()=>setTimeout(()=>{if(pendingReload&&!busyNow())doReload()},400));
+}
+try{if(sessionStorage.getItem('rf_updated')){sessionStorage.removeItem('rf_updated');setTimeout(()=>toast('App wurde aktualisiert ✓ (Version '+APP_VERSION+')'),800)}}catch(e){}
 boot();
 </script>
 </body>
