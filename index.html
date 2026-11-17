@@ -165,7 +165,7 @@ svg text{fill:var(--muted);font-size:10px;font-family:inherit}
 // Hier kann die Client-ID aus dem Google-Cloud-Projekt fest eingetragen werden.
 // Bleibt sie leer, kann man sie in der App unter „Mehr → Google Drive“ eintragen.
 const GOOGLE_CLIENT_ID = '663949454194-uvp8nkc63rptnpkpnkbh8r7u8a9m5lje.apps.googleusercontent.com';
-const APP_VERSION = '1.5';
+const APP_VERSION = '1.6';
 const FILE_NAME = 'rauchfrei-daten.json';
 const ITER = 300000;
 const LS = {blob:'rf_blob', key:'rf_key', me:'rf_me', drive:'rf_drive'};
@@ -473,45 +473,52 @@ const Drive = {
     if(!r.ok) throw new Error('Google Drive meldet Fehler '+r.status);
     return r;
   },
-  async findFile(){
-    const c=this.cfg(); if(c.fileId) return c.fileId;
+  // Alle Rauchfrei-Dateien in Drive (älteste zuerst). Früher hat sich jedes Handy
+  // „seine“ Datei gemerkt – dadurch konnten zwei getrennte Dateien entstehen.
+  async listFiles(){
     const q=encodeURIComponent(`name='${FILE_NAME}' and trashed=false`);
-    const r=await this.api('https://www.googleapis.com/drive/v3/files?spaces=drive&orderBy=modifiedTime%20desc&fields=files(id)&q='+q);
-    const j=await r.json(); const id=j.files&&j.files[0]&&j.files[0].id;
-    if(id) this.set({fileId:id}); return id||null;
+    const r=await this.api('https://www.googleapis.com/drive/v3/files?spaces=drive&orderBy=createdTime&pageSize=50&fields=files(id,modifiedTime)&q='+q);
+    const j=await r.json(); return j.files||[];
   },
-  async download(){
-    const id=await this.findFile(); if(!id) return null;
+  async get(id){
     const r=await this.api('https://www.googleapis.com/drive/v3/files/'+id+'?alt=media',{allow404:true});
-    if(!r){this.set({fileId:null});return this.download()}
-    return r.json();
+    if(!r) return null; try{return await r.json()}catch(e){return null}
   },
+  async download(){ // neuester Stand (für „Daten aus Google Drive holen“)
+    const fs=(await this.listFiles()).sort((x,y)=>String(y.modifiedTime).localeCompare(String(x.modifiedTime)));
+    for(const f of fs){const j=await this.get(f.id);if(j&&j.app==='rauchfrei'&&j.data)return j}
+    return null;
+  },
+  async remove(id){await this.api('https://www.googleapis.com/drive/v3/files/'+id,{method:'DELETE',allow404:true})},
   async deleteAll(){
-    const q=encodeURIComponent(`name='${FILE_NAME}' and trashed=false`);
-    const r=await this.api('https://www.googleapis.com/drive/v3/files?spaces=drive&fields=files(id)&q='+q);
-    const j=await r.json();
-    for(const f of (j.files||[])) await this.api('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE',allow404:true});
+    const fs=await this.listFiles();
+    for(const f of fs) await this.remove(f.id);
     this.set({fileId:null});
-    return (j.files||[]).length;
+    return fs.length;
   },
-  async upload(blob){
-    const id=await this.findFile(), body=JSON.stringify(blob);
+  async account(){
+    try{const r=await this.api('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)');const j=await r.json();if(j.user&&j.user.emailAddress)this.set({email:j.user.emailAddress})}catch(e){}
+  },
+  async upload(blob,id){
+    const body=JSON.stringify(blob);
     if(id){
       const r=await this.api('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body,allow404:true});
-      if(r) return; this.set({fileId:null});
+      if(r) return id;
     }
     const bnd='rf'+Date.now(), meta={name:FILE_NAME,mimeType:'application/json'};
     const mp=`--${bnd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${bnd}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${bnd}--`;
     const r=await this.api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bnd},body:mp});
-    const j=await r.json(); this.set({fileId:j.id});
+    const j=await r.json(); return j.id;
   }
 };
+const altKeys=new Map(); // frühere Schlüssel dieser Sitzung (nach dem Zusammenführen)
 let syncT=null, driveConflict=null;
 async function resolveConflict(u,p){
   const remote=driveConflict; if(!remote) return;
   const key=await deriveKey(u,p,remote.salt,remote.it);
   const rs=await decryptBlob(key,remote); // wirft bei falschen Zugangsdaten
   const kept=!!lsGet(LS.key);
+  altKeys.set(S.salt,S.key);
   S.state=merge(rs,S.state); S.key=key; S.salt=remote.salt; driveConflict=null;
   await persist(); if(kept) await saveKey(key,remote.salt);
   closeAll(); render(); await sync(false);
@@ -525,21 +532,27 @@ async function sync(interactive,opts){
   Drive.busy=true; Drive.status='Abgleich läuft …'; updateSyncBtn();
   try{
     await Drive.auth(interactive);
-    if(!opts.pushOnly){
-      const remote=await Drive.download();
-      if(remote){
-        if(remote.salt!==S.salt){driveConflict=remote;throw Object.assign(new Error('Google Drive hat einen anderen Datenstand. Bitte unter Mehr → Google Drive zusammenführen.'),{hard:true})}
-        let rs; try{rs=await decryptBlob(S.key,remote)}catch(e){driveConflict=remote;throw Object.assign(new Error('Google Drive hat einen anderen Datenstand. Bitte unter Mehr → Google Drive zusammenführen.'),{hard:true})}
-        driveConflict=null;
-        S.state=merge(S.state,rs);
-      }
+    if(interactive||!Drive.cfg().email) await Drive.account();
+    // ALLE Dateien einlesen und zusammenführen, dann in eine einzige schreiben
+    const files=await Drive.listFiles(), done=[];
+    for(const f of files){
+      if(opts.pushOnly){done.push(f.id);continue}
+      const remote=await Drive.get(f.id);
+      if(!remote||remote.app!=='rauchfrei'||!remote.data) continue;
+      const key=remote.salt===S.salt?S.key:altKeys.get(remote.salt);
+      let rs=null; if(key){try{rs=await decryptBlob(key,remote)}catch(e){}}
+      if(!rs){driveConflict=remote;throw Object.assign(new Error('Google Drive hat einen anderen Datenstand. Bitte unter Mehr → Google Drive zusammenführen.'),{hard:true})}
+      S.state=merge(S.state,rs); done.push(f.id);
     }
+    driveConflict=null;
     const blob=await encryptState(S.key,S.salt,S.state);
     lsSet(LS.blob,JSON.stringify(blob));
-    await Drive.upload(blob);
-    Drive.set({last:Date.now()}); Drive.status='Abgeglichen um '+fmtTime(Date.now());
+    const id=await Drive.upload(blob,done[0]||null);
+    for(const fid of done) if(fid!==id) await Drive.remove(fid); // doppelte Dateien aufräumen (Inhalt ist schon übernommen)
+    Drive.set({fileId:id,last:Date.now()}); Drive.status='Abgeglichen um '+fmtTime(Date.now());
     if(interactive) toast('Mit Google Drive abgeglichen ✓');
     render();
+    const top=M.stack[M.stack.length-1]; if(top&&top.isQuiz&&!Q) showTop(); // offene Quiz-Übersicht auffrischen
   }catch(e){Drive.status=e.message; if(interactive||e.hard) toast(e.message,6000); updateSyncBtn(); if(ui.tab==='more') render();}
   finally{Drive.busy=false;updateSyncBtn()}
 }
@@ -769,6 +782,7 @@ const VIEWS = {
     <p class="small"><b>Wichtig:</b> Meldet euch auf beiden Handys mit <b>demselben Google-Konto</b> an.</p>
     ${GOOGLE_CLIENT_ID?'':`<form data-form="cid"><label>Google Client-ID<input name="cid" value="${esc(dc.cid||'')}" placeholder="…apps.googleusercontent.com" autocapitalize="none" autocorrect="off" spellcheck="false"></label><button class="btn" style="margin-top:8px">Client-ID speichern</button></form>`}
     <p class="small"><b>Status:</b> ${Drive.on()?esc(Drive.status||(Drive.valid()?'Verbunden':'Anmeldung nötig')):'Nicht verbunden'}${dc.last?' · zuletzt '+fmtDate(dc.last)+' '+fmtTime(dc.last):''}</p>
+    ${Drive.on()&&dc.email?`<p class="small"><b>Google-Konto:</b> ${esc(dc.email)}<br><span class="muted">Muss auf beiden Handys genau gleich sein.</span></p>`:''}
     ${driveConflict?`<div class="hint" style="margin:10px 0"><b>In Google Drive liegen Daten, die mit anderen Zugangsdaten angelegt wurden</b> – z. B. weil die App zweimal neu eingerichtet wurde. Gib die Zugangsdaten ein, mit denen die Daten in Google Drive angelegt wurden. Dann wird alles zusammengeführt, es geht nichts verloren.<button class="btn primary" style="margin-top:10px" data-act="mergeDrive">Jetzt zusammenführen</button><button class="btn danger" style="margin-top:8px" data-act="wipeAll">Oder: alles löschen und frisch anfangen</button></div>`:''}
     <div class="stack">${Drive.on()?`<button class="btn primary" data-act="syncNow">Jetzt abgleichen</button><button class="btn ghost" data-act="driveOff">Verbindung trennen</button>`:`<button class="btn primary" data-act="syncNow">Mit Google Drive verbinden</button>`}</div>
    </details>
@@ -914,7 +928,7 @@ function quizCard(){
 }
 let Q=null;
 function quizModal(){
-  return {
+  return {isQuiz:true,
     html(){
       const k=me(),o=other(k),d=dayKey();
       if(!Q){ // Übersicht
@@ -1048,14 +1062,14 @@ const ACT = {
     showAuth('Alles gelöscht. Jetzt einmal neu einrichten.');
   },
   checkUpdate(){checkUpdate(true)},
-  quiz(){Q=null;pushModal(quizModal())},
+  quiz(){Q=null;pushModal(quizModal());scheduleSync(true)},
   quizStart(){if(quizResult(dayKey(),me())){toast('Du hast heute schon gespielt – morgen gibt es neue Fragen!');return}quizBegin(false)},
   quizPractice(){quizBegin(true)},
   quizAns(el){quizAnswer(+el.dataset.i)},
   quizNext(){quizNext()},
   quizBack(){Q=null;showTop()},
   mergeDrive(){pushModal(credsModal('Mit Google Drive zusammenführen','Benutzername und Passwort, mit denen die Daten in Google Drive angelegt wurden (also beim ersten Einrichten).',resolveConflict))},
-  driveOff(){if(!confirm('Verbindung zu Google Drive trennen? Die Daten in Drive bleiben erhalten.'))return;Drive.set({on:false,token:null,exp:0,fileId:null});Drive.status='';ui.open='drive';render()},
+  driveOff(){if(!confirm('Verbindung zu Google Drive trennen? Die Daten in Drive bleiben erhalten.'))return;Drive.set({on:false,token:null,exp:0,fileId:null,email:null});Drive.status='';ui.open='drive';render()},
   export(){downloadBlob()},
   import(){chooseFile(importIntoSession)},
   logout(){if(confirm('Abmelden? Beim nächsten Öffnen braucht ihr Benutzername und Passwort.'))logout()},
