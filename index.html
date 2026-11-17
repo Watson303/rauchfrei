@@ -137,6 +137,35 @@ details.card[open]>summary::after{transform:rotate(-90deg)}
 #toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1e2622;color:#fff;padding:11px 16px;border-radius:11px;font-size:14.5px;z-index:40;max-width:92vw;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center}
 #toast.show{opacity:1}
 svg text{fill:var(--muted);font-size:10px;font-family:inherit}
+.c4{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;background:#24563f;padding:7px;border-radius:14px;max-width:380px;margin:12px auto}
+.c4 button{aspect-ratio:1;border-radius:50%;border:0;background:var(--bg);padding:0;cursor:pointer;transition:background .2s}
+.c4 button:disabled{cursor:default}
+.c4 button.a{background:var(--a)}.c4 button.b{background:var(--b)}
+.c4 button.win{box-shadow:0 0 0 3px #ffd84a inset}
+.c4 button.last{box-shadow:0 0 0 2px rgba(255,255,255,.75) inset}
+.dbox{box-shadow:none;margin-bottom:10px;padding:12px 14px}
+.dbox .two .btn{padding:9px 10px;font-size:15px}
+.rx{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:260px;border:0;border-radius:18px;margin-top:12px;font-size:26px;font-weight:800;color:#fff;font-family:inherit;cursor:pointer;background:#5f6d66;touch-action:manipulation}
+.rx small{font-size:14px;font-weight:500;margin-top:8px;opacity:.9}
+.rx.wait{background:var(--sos)}.rx.go{background:#21a35f}
+.wgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;max-width:270px;margin:10px auto}
+.wgrid div{aspect-ratio:1;border:2px solid var(--line);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px}
+.wg{background:#2f9a5a!important;border-color:#2f9a5a!important;color:#fff!important}
+.wy{background:#d4a21f!important;border-color:#d4a21f!important;color:#fff!important}
+.wx{background:#7b8580!important;border-color:#7b8580!important;color:#fff!important}
+.kb{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.kb div{display:flex;gap:4px;justify-content:center}
+.kb button{flex:1;max-width:36px;height:48px;border-radius:7px;border:0;background:var(--line);color:var(--ink);font-weight:700;font-size:15px;padding:0;font-family:inherit;touch-action:manipulation}
+.kb button.wide{max-width:54px;flex:1.6;font-size:13px}
+.ngrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:360px;margin:12px auto}
+.ngrid button{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:22px;font-weight:700;font-family:inherit;touch-action:manipulation}
+.ngrid button.done{background:var(--acc2);color:var(--muted);opacity:.5}
+.ngrid button.bad{background:var(--sos);color:#fff}
+.nim{margin:14px 0}
+.nrow{display:flex;justify-content:center;gap:4px;margin:6px 0;min-height:46px}
+.nrow button{border:2px solid transparent;background:var(--acc2);border-radius:10px;font-size:24px;width:42px;height:46px;padding:0;cursor:pointer;touch-action:manipulation}
+.nrow button.sel{border-color:var(--sos);background:var(--warm);opacity:.6}
+.nrow span{width:42px;height:46px;display:flex;align-items:center;justify-content:center;color:var(--line);font-size:24px}
 </style>
 </head>
 <body>
@@ -165,7 +194,7 @@ svg text{fill:var(--muted);font-size:10px;font-family:inherit}
 // Hier kann die Client-ID aus dem Google-Cloud-Projekt fest eingetragen werden.
 // Bleibt sie leer, kann man sie in der App unter „Mehr → Google Drive“ eintragen.
 const GOOGLE_CLIENT_ID = '663949454194-uvp8nkc63rptnpkpnkbh8r7u8a9m5lje.apps.googleusercontent.com';
-const APP_VERSION = '1.6';
+const APP_VERSION = '1.8';
 const FILE_NAME = 'rauchfrei-daten.json';
 const ITER = 300000;
 const LS = {blob:'rf_blob', key:'rf_key', me:'rf_me', drive:'rf_drive'};
@@ -332,7 +361,9 @@ const BADGES = [
  {e:'📣',t:'Fan-Club',d:'10 Nachrichten',f:c=>c.cheers>=10},
  {e:'🧠',t:'Quizfuchs',d:'Erstes Quiz-Duell',f:c=>c.quizPlays>=1},
  {e:'⚡',t:'Volltreffer',d:'5 von 5 im Quiz',f:c=>c.quizPerfect>=1},
- {e:'👑',t:'Quizkönig',d:'5 Duelle gewonnen',f:c=>c.quizWins>=5}
+ {e:'👑',t:'Quizkönig',d:'5 Quiz-Duelle gewonnen',f:c=>c.quizWins>=5},
+ {e:'🎮',t:'Spielfreudig',d:'10 Duelle gespielt',f:c=>c.duelPlays>=10},
+ {e:'🔴',t:'Strategin',d:'Erstes Zug-um-Zug-Spiel gewonnen',f:c=>c.c4Wins>=1}
 ];
 const TEAM_BADGES = [
  {e:'🤝',t:'Team-Woche',d:'Beide 7 Tage rauchfrei',f:(a,b,g)=>a.days>=7&&b.days>=7},
@@ -390,12 +421,12 @@ const other = k => k==='a'?'b':'a';
 const P = k => S.state.people[k];
 
 function person(name){return {name, quit:Date.now(), perDay:20, packPrice:8.5, packSize:20, reasons:[], set:false, u:Date.now()}}
-function newState(a,b){return {v:1, people:{a:person(a),b:person(b)}, goal:{name:'Gemeinsamer Urlaub',amount:1500,u:Date.now()}, cravings:[], cheers:[], events:[], quiz:[], seen:{a:[],b:[]}, deleted:[]}}
+function newState(a,b){return {v:1, people:{a:person(a),b:person(b)}, goal:{name:'Gemeinsamer Urlaub',amount:1500,u:Date.now()}, cravings:[], cheers:[], events:[], quiz:[], duels:[], matches:[], moves:[], seen:{a:[],b:[]}, deleted:[]}}
 function normalize(st){
   st.people=st.people||{};
   ['a','b'].forEach(k=>{st.people[k]=Object.assign(person(k==='a'?'Person 1':'Person 2'),st.people[k]||{});if(!Array.isArray(st.people[k].reasons))st.people[k].reasons=[]});
   st.goal=st.goal||{name:'Gemeinsames Ziel',amount:1000,u:0};
-  ['cravings','cheers','events','quiz','deleted'].forEach(f=>{if(!Array.isArray(st[f]))st[f]=[]});
+  ['cravings','cheers','events','quiz','duels','matches','moves','deleted'].forEach(f=>{if(!Array.isArray(st[f]))st[f]=[]});
   st.seen=st.seen||{};st.seen.a=st.seen.a||[];st.seen.b=st.seen.b||[];
   return st;
 }
@@ -409,6 +440,9 @@ function merge(L,R){
     goal:newer(L.goal,R.goal),
     cravings:unionById(L.cravings,R.cravings,del),
     quiz:unionById(L.quiz,R.quiz,del),
+    duels:unionById(L.duels,R.duels,del),
+    matches:unionById(L.matches,R.matches,del),
+    moves:unionById(L.moves,R.moves,del),
     cheers:unionById(L.cheers,R.cheers,del),
     events:unionById(L.events,R.events,del),
     seen:{a:[...new Set([...L.seen.a,...R.seen.a])],b:[...new Set([...L.seen.b,...R.seen.b])]},
@@ -428,9 +462,10 @@ function ctx(k){
   return Object.assign(calc(st.people[k]),{
     resisted:cr.filter(c=>c.resisted).length, diary:cr.length,
     breaths:st.events.filter(e=>e.p===k&&e.type==='breath').length,
-    games:st.events.filter(e=>e.p===k&&e.type==='game').length,
+    games:st.events.filter(e=>e.p===k&&e.type==='game').length+st.duels.filter(x=>x.p===k&&x.g==='mem'&&x.done).length,
     cheers:st.cheers.filter(c=>c.from===k).length,
-    quizPlays:st.quiz.filter(q=>q.p===k).length, quizPerfect:st.quiz.filter(q=>q.p===k&&q.score>=5).length, quizWins:quizStats()[k]});
+    quizPlays:st.quiz.filter(q=>q.p===k).length, quizPerfect:st.quiz.filter(q=>q.p===k&&q.score>=5).length, quizWins:quizStats()[k],
+    duelPlays:st.quiz.filter(q=>q.p===k).length+st.duels.filter(x=>x.p===k).length, c4Wins:c4Stats()[k]+nimStats()[k]});
 }
 function fmtDur(ms){
   const d=Math.floor(ms/D), h=Math.floor(ms%D/H), m=Math.floor(ms%H/6e4);
@@ -552,7 +587,7 @@ async function sync(interactive,opts){
     Drive.set({fileId:id,last:Date.now()}); Drive.status='Abgeglichen um '+fmtTime(Date.now());
     if(interactive) toast('Mit Google Drive abgeglichen ✓');
     render();
-    const top=M.stack[M.stack.length-1]; if(top&&top.isQuiz&&!Q) showTop(); // offene Quiz-Übersicht auffrischen
+    const top=M.stack[M.stack.length-1]; if(top&&top.refresh&&top.refresh()) showTop(); // offene Duell-Ansicht auffrischen
   }catch(e){Drive.status=e.message; if(interactive||e.hard) toast(e.message,6000); updateSyncBtn(); if(ui.tab==='more') render();}
   finally{Drive.busy=false;updateSyncBtn()}
 }
@@ -668,7 +703,7 @@ const VIEWS = {
    <div class="card"><div class="row"><b>🎯 ${esc(g.name)}</b><span class="small">${eur(total)} / ${eur(g.amount)}</span></div>
     <div class="bar thick"><i style="width:${gp.toFixed(1)}%"></i></div>
     <div class="small muted" style="margin-top:6px">${g.amount>0&&total>=g.amount?'Ziel erreicht – gönnt es euch! 🎉':'Noch '+eur(Math.max(0,g.amount-total))+' bis zum Ziel. Zusammen spart ihr '+eur((pnum(P('a').perDay)*pnum(P('a').packPrice)/(P('a').packSize||20))+(pnum(P('b').perDay)*pnum(P('b').packPrice)/(P('b').packSize||20)))+' pro Tag.'}</div></div>
-   ${quizCard()}
+   ${duelsCard()}
    <button class="btn big" data-act="cheer">💌 ${esc(P(o).name)} anfeuern</button>`;
  },
 
@@ -760,7 +795,7 @@ const VIEWS = {
     <div class="two" style="margin-top:12px"><button class="btn primary">Speichern</button><button type="button" class="btn ghost" data-act="restart" data-k="${x}">Neu starten</button></div></form>`};
   return `
    <div class="two" style="margin-bottom:8px"><button class="btn big" data-act="breath">🫁 Atemübung</button><button class="btn big" data-act="game">🧩 Spiel</button></div>
-   <button class="btn big" style="margin-bottom:14px" data-act="quiz">🧠 Quiz-Duell</button>
+   <button class="btn big primary" style="margin-bottom:14px" data-act="duels">🎮 Duelle gegeneinander</button>
    <details class="card" ${ui.open==='reasons'?'open':''} data-sec="reasons"><summary>💡 Meine Gründe</summary>
     <p class="small muted">Warum hörst du auf? Deine Gründe erscheinen, wenn du den 🆘-Knopf drückst.</p>
     <ul class="rlist">${P(k).reasons.map((r,i)=>`<li><span>${esc(r)}</span><button data-act="delReason" data-i="${i}" aria-label="Entfernen">×</button></li>`).join('')||'<li class="muted"><span>Noch keine Gründe eingetragen.</span></li>'}</ul>
@@ -818,6 +853,7 @@ function sosModal(){
      ${reason?`<div class="reason">❤️ <b>Dein Grund:</b><br>${esc(reason)}</div>`:`<div class="reason small">Tipp: Unter <b>Mehr → Meine Gründe</b> kannst du aufschreiben, warum du aufhörst. Die erscheinen dann hier.</div>`}
      <div class="tip"><b>Probier das:</b> <span id="tipTxt">${esc(sosTip)}</span><br><button class="link" data-act="newTip">Anderer Tipp ↻</button></div>
      <div class="two"><button class="btn" data-act="breath">🫁 Atmen</button><button class="btn" data-act="game">🧩 Spiel</button></div>
+     <button class="btn" style="margin-top:8px" data-act="duels">🎮 Gegeneinander spielen</button>
      <button class="btn ghost" style="margin-top:8px" data-act="askHelp">💬 ${esc(P(other(k)).name)} Bescheid geben</button>
      <h3>Wie stark ist das Verlangen? <span id="sI">3</span> von 5</h3><input type="range" id="sosI" min="1" max="5" value="3" data-out="sI">
      <div class="chips">${TRIGGERS.map(t=>`<label class="chip"><input type="radio" name="sosT" value="${esc(t)}"><span>${esc(t)}</span></label>`).join('')}</div>
@@ -849,19 +885,21 @@ function breathStart(){
 }
 
 let G=null;
-function gameNew(){const em=['🍎','🌿','🌊','🌞','🚲','⭐','🎈','🦋'];G={deck:shuffle([...em,...em]).map(e=>({e,open:false,done:false})),first:-1,lock:false,moves:0,pairs:0,start:Date.now()}}
-function gameModal(){gameNew();return {html:()=>`<h2>🧩 Memory</h2><p class="small muted">Finde alle Paare. Das lenkt ab, bis das Verlangen vorbei ist.</p><div class="mem" id="mem"></div><div class="center small" id="gstat"></div><div id="gagain"></div>`,init:renderMem}}
+function gameNew(day){const em=['🍎','🌿','🌊','🌞','🚲','⭐','🎈','🦋'];const deck=day?sshuffle([...em,...em],seedRng('rf-mem-'+day)):shuffle([...em,...em]);G={deck:deck.map(e=>({e,open:false,done:false})),first:-1,lock:false,moves:0,pairs:0,start:0,duel:day||null,finished:false}}
+function gameModal(day){gameNew(day);return {html:()=>G.duel?`<h2>🧩 Memory-Duell</h2><p class="small muted">Heute für euch beide dasselbe Feld. Weniger Züge gewinnt, bei Gleichstand die Zeit. Die Uhr läuft ab der ersten Karte.</p><div class="mem" id="mem"></div><div class="center small" id="gstat"></div><div id="gagain"></div>`:`<h2>🧩 Memory</h2><p class="small muted">Finde alle Paare. Das lenkt ab, bis das Verlangen vorbei ist.</p><div class="mem" id="mem"></div><div class="center small" id="gstat"></div><div id="gagain"></div>`,init:renderMem}}
 function renderMem(){
   const m=$('#mem');if(!m)return;
   m.innerHTML=G.deck.map((c,i)=>`<button class="${c.done?'done':c.open?'open':''}" data-act="flip" data-i="${i}" aria-label="Karte">${c.e}</button>`).join('');
   $('#gstat').textContent=`Züge: ${G.moves} · Paare: ${G.pairs} von 8`;
 }
 function flip(i){
-  const c=G.deck[i];if(G.lock||c.open||c.done)return;
+  const c=G.deck[i];if(G.lock||c.open||c.done||G.finished)return;
+  if(!G.start)G.start=Date.now();
   c.open=true;
   if(G.first<0){G.first=i;renderMem();return}
   G.moves++;const f=G.deck[G.first];
   if(f.e===c.e){f.done=c.done=true;G.pairs++;G.first=-1;renderMem();
+    if(G.pairs===8&&G.duel){memDuelEnd();return}
     if(G.pairs===8){const s=Math.round((Date.now()-G.start)/1000);$('#gstat').textContent=`Geschafft in ${G.moves} Zügen und ${s} Sekunden! 🎉`;$('#gagain').innerHTML='<button class="btn primary" data-act="gameAgain" style="margin-top:10px">Nochmal spielen</button>';logEvent('game')}
   }else{G.lock=true;renderMem();M.timers.push(setTimeout(()=>{f.open=c.open=false;G.first=-1;G.lock=false;renderMem()},850))}
 }
@@ -915,20 +953,9 @@ function quizStats(){
   return res;
 }
 const fmtSec=ms=>(ms/1000).toFixed(1).replace('.',',')+' s';
-function quizCard(){
-  const k=me(),o=other(k),d=dayKey(),mine=quizResult(d,k),theirs=quizResult(d,o),st=quizStats();
-  let line;
-  if(!mine&&!theirs) line='Heute hat noch keiner gespielt. Leg vor!';
-  else if(!mine) line=`${esc(P(o).name)} hat schon ${theirs.score} von ${QUIZ_N} – schaffst du mehr?`;
-  else if(!theirs) line=`Du hast ${mine.score} von ${QUIZ_N}. Jetzt ist ${esc(P(o).name)} dran.`;
-  else {const w=duelWinner(quizResult(d,'a'),quizResult(d,'b'));line=w==='draw'?`Unentschieden! ${mine.score}:${theirs.score} in gleicher Zeit.`:`${esc(P(w).name)} gewinnt heute ${Math.max(mine.score,theirs.score)}:${Math.min(mine.score,theirs.score)}${mine.score===theirs.score?' (schneller)':''} 🏆`}
-  return `<div class="card"><div class="row"><b>🧠 Quiz-Duell heute</b><span class="small muted">Stand ${st.a}:${st.b}</span></div>
-   <p class="small" style="margin:8px 0 10px">${line}</p>
-   <button class="btn ${mine?'ghost':'primary'}" data-act="quiz">${mine?'Ergebnisse ansehen':'Jetzt spielen'}</button></div>`;
-}
 let Q=null;
 function quizModal(){
-  return {isQuiz:true,
+  return {refresh:()=>!Q,
     html(){
       const k=me(),o=other(k),d=dayKey();
       if(!Q){ // Übersicht
@@ -994,6 +1021,369 @@ function quizNext(){
   showTop();
 }
 
+/* ============ Duelle ============ */
+// Tagesduelle: Quiz, Kopfrechnen, Memory, Reaktion, Wort-Raten, Zahlenjagd
+// Zug um Zug: Vier gewinnt, Zigaretten-Duell
+const lower=(f)=>(a,b)=>{if(!!a.done!==!!b.done)return a.done?'a':'b';if(!a.done)return 'draw';for(const k of f){if(a[k]!==b[k])return a[k]<b[k]?'a':'b'}return 'draw'};
+const DUELS={
+  math:{t:'🔢 Kopfrechnen',d:'60 Sekunden, so viele Aufgaben wie möglich. Bei Gleichstand zählen die Fehler.',
+    fmt:r=>`${r.score} richtig${r.wrong?' · '+r.wrong+' falsch':''}`,
+    win:(a,b)=>a.score!==b.score?(a.score>b.score?'a':'b'):a.wrong!==b.wrong?(a.wrong<b.wrong?'a':'b'):'draw'},
+  mem:{t:'🧩 Memory',d:'Dasselbe Feld für beide. Weniger Züge gewinnt, dann die Zeit.',
+    fmt:r=>r.done?`${r.moves} Züge · ${fmtSec(r.ms)}`:'abgebrochen', win:lower(['moves','ms'])},
+  react:{t:'⚡ Reaktion',d:'5× tippen, sobald es grün wird. Der schnellere Durchschnitt gewinnt.',
+    fmt:r=>`Ø ${num(r.ms)} ms${r.early?' · '+r.early+'× zu früh':''}`, win:lower(['ms'])},
+  word:{t:'🔤 Wort-Raten',d:'Wort des Tages mit 5 Buchstaben, höchstens 6 Versuche. Weniger Versuche gewinnt, dann die Zeit.',
+    fmt:r=>r.done?`${r.tries}. Versuch · ${fmtSec(r.ms)}`:'nicht erraten', win:lower(['tries','ms'])},
+  num:{t:'🎯 Zahlenjagd',d:'Tippe 1 bis 25 der Reihe nach an. Jeder Fehler kostet 1 Sekunde.',
+    fmt:r=>r.done?`${fmtSec(r.ms)}${r.errors?' (inkl. '+r.errors+' Fehler)':''}`:'abgebrochen', win:lower(['ms'])}
+};
+const DAILY=['quiz','math','mem','react','word','num'];
+function duelResult(g,day,k){return S.state.duels.find(x=>x.g===g&&x.day===day&&x.p===k)}
+function duelWin(g,day){const ra=duelResult(g,day,'a'),rb=duelResult(g,day,'b');return ra&&rb?DUELS[g].win(ra,rb):null}
+function duelStats(g){const res={a:0,b:0,draw:0};new Set(S.state.duels.filter(x=>x.g===g).map(x=>x.day)).forEach(d=>{const w=duelWin(g,d);if(w)res[w]++});return res}
+function played(g,day,k){return g==='quiz'?!!quizResult(day,k):!!duelResult(g,day,k)}
+function saveDuel(g,day,data){
+  const k=me(); if(duelResult(g,day,k)) return;
+  S.state.duels.push(Object.assign({id:uid(),p:k,g,day,t:Date.now()},data));
+  commit(); scheduleSync(true);
+}
+function duelVerdict(w){const k=me();return w==='draw'?'Unentschieden! 🤝':w===k?'Du gewinnst heute! 🏆':`${esc(P(other(k)).name)} gewinnt heute – morgen gibt's Revanche!`}
+// Ergebnisbildschirm für alle Tagesduelle
+function duelEndHtml(g,day,practice,big,sub){
+  const k=me(),o=other(k),mine=practice?null:duelResult(g,day,k),theirs=practice?null:duelResult(g,day,o);
+  let v=''; if(mine&&theirs) v=duelVerdict(DUELS[g].win(k==='a'?mine:theirs,k==='a'?theirs:mine)); else if(!practice) v=`Jetzt ist ${esc(P(o).name)} dran!`;
+  return `<h2>${practice?'Übungsrunde':DUELS[g].t} – fertig</h2>
+    <div class="cd" style="color:var(--acc)">${big}</div><p class="center small muted">${sub}</p>
+    ${theirs?`<p class="center">${esc(P(o).name)}: <b>${DUELS[g].fmt(theirs)}</b></p>`:''}
+    <p class="center"><b>${v}</b></p>
+    <div class="stack"><button class="btn primary" data-act="close">Zurück</button>${practice?`<button class="btn ghost" data-act="dPractice" data-g="${g}">Noch eine Übungsrunde</button>`:''}</div>`;
+}
+function alreadyToast(g){toast(`${DUELS[g].t.slice(2).trim()} hast du heute schon gespielt – morgen wieder!`)}
+
+/* --- Kopfrechnen --- */
+const MATH_SEC=60;
+function mathTasks(r){
+  const out=[];
+  for(let n=0;n<150;n++){
+    const ty=Math.floor(r()*4); let q,ans;
+    if(ty===0){const a=10+Math.floor(r()*90),b=10+Math.floor(r()*90);q=`${a} + ${b}`;ans=a+b}
+    else if(ty===1){const a=20+Math.floor(r()*80),b=1+Math.floor(r()*(a-1));q=`${a} − ${b}`;ans=a-b}
+    else if(ty===2){const a=2+Math.floor(r()*11),b=2+Math.floor(r()*11);q=`${a} × ${b}`;ans=a*b}
+    else {const b=2+Math.floor(r()*9),c=2+Math.floor(r()*11);q=`${b*c} ÷ ${b}`;ans=c}
+    const offs=[-10,-2,-1,1,2,10,-3,3], opts=new Set([ans]);
+    while(opts.size<4){const o=ans+offs[Math.floor(r()*offs.length)];if(o>=0)opts.add(o)}
+    out.push({q,ans,o:sshuffle([...opts],r)});
+  }
+  return out;
+}
+let MX=null;
+function mathBegin(practice){
+  const d=dayKey(); if(!practice&&played('math',d,me())) return alreadyToast('math');
+  MX={day:d,practice,tasks:mathTasks(practice?Math.random:seedRng('rf-math-'+d)),i:0,score:0,wrong:0,start:0,end:false,last:null};
+  pushModal(mathModal());
+}
+function mathModal(){return {game:true,
+  html(){
+    if(MX.end) return duelEndHtml('math',MX.day,MX.practice,MX.score,`richtig · ${MX.wrong} falsch`);
+    const t=MX.tasks[MX.i];
+    return `<div class="row small muted" style="padding-right:40px"><span>${MX.practice?'Übung · ':''}<span id="mleft">${MATH_SEC}</span> s</span><span>${MX.score} richtig</span></div>
+      <div class="bar" style="margin:8px 0 18px"><i id="mbar" style="width:100%"></i></div>
+      <div class="cd" style="color:var(--ink);font-size:40px">${t.q}</div>
+      <div class="center small" style="min-height:1.5em;color:${MX.last===false?'var(--sos)':'var(--acc)'}">${MX.last===null?'':MX.last?'✓ richtig':'✗ falsch'}</div>
+      <div class="two" style="margin-top:8px">${t.o.map(v=>`<button class="btn big" style="font-size:22px" data-act="mathAns" data-v="${v}">${v}</button>`).join('')}</div>`;
+  },
+  init(){
+    if(MX.end) return;
+    if(!MX.start) MX.start=Date.now();
+    const tick=()=>{const left=MATH_SEC*1000-(Date.now()-MX.start);
+      const l=$('#mleft'),b=$('#mbar');if(l)l.textContent=Math.max(0,Math.ceil(left/1000));if(b)b.style.width=Math.max(0,left/(MATH_SEC*10))+'%';
+      if(left<=0) mathEnd(true)};
+    tick(); M.timers.push(setInterval(tick,100));
+  }
+}}
+function mathAns(v){
+  if(!MX||MX.end) return;
+  const ok=+v===MX.tasks[MX.i].ans; if(ok)MX.score++;else MX.wrong++;
+  MX.last=ok; MX.i=Math.min(MX.i+1,MX.tasks.length-1); showTop();
+}
+function mathEnd(show){
+  if(!MX||MX.end) return; MX.end=true;
+  if(!MX.practice) saveDuel('math',MX.day,{score:MX.score,wrong:MX.wrong,ms:MATH_SEC*1000});
+  if(show) showTop();
+}
+
+/* --- Memory-Duell --- */
+function memDuelBegin(practice){
+  if(practice) return pushModal(gameModal());
+  const d=dayKey(); if(played('mem',d,me())) return alreadyToast('mem');
+  pushModal(gameModal(d));
+}
+function memDuelEnd(){
+  G.finished=true; const ms=Date.now()-G.start;
+  saveDuel('mem',G.duel,{moves:G.moves,ms,done:true});
+  $('#mbody').innerHTML=duelEndHtml('mem',G.duel,false,G.moves,`Züge · ${fmtSec(ms)}`);
+}
+
+/* --- Reaktion --- */
+let RX=null;
+const REACT_N=5;
+function reactBegin(practice){
+  const d=dayKey(); if(!practice&&played('react',d,me())) return alreadyToast('react');
+  RX={day:d,practice,times:[],early:0,phase:'ready',goAt:0,msg:'',end:false}; pushModal(reactModal());
+}
+function reactModal(){return {game:true,
+  html(){
+    if(RX.end){const avg=RX.times.reduce((s,t)=>s+t,0)/RX.times.length;return duelEndHtml('react',RX.day,RX.practice,num(avg)+' ms',`Durchschnitt aus ${REACT_N} Runden${RX.early?' · '+RX.early+'× zu früh (je 1 Sekunde)':''}`)}
+    const ph=RX.phase, txt={ready:'Tippen zum Starten',wait:'Warten …',go:'JETZT tippen!',shown:RX.msg+'<small>Tippen für die nächste Runde</small>'}[ph];
+    return `<h2>${RX.practice?'Übung · ':''}⚡ Reaktion</h2>
+      <p class="small muted">Tippe so schnell wie möglich, sobald das Feld <b>grün</b> wird. Nicht zu früh – das kostet eine Sekunde.</p>
+      <div class="row small muted"><span>Runde ${Math.min(RX.times.length+1,REACT_N)} von ${REACT_N}</span><span>${RX.times.map(t=>num(t)).join(' · ')}</span></div>
+      <button id="rxb" class="rx ${ph}" data-act="reactTap">${txt}</button>`;
+  },
+  init(){
+    if(!RX.end&&RX.phase==='wait') M.timers.push(setTimeout(()=>{RX.phase='go';const el=$('#rxb');if(el){el.className='rx go';el.innerHTML='JETZT tippen!'}RX.goAt=performance.now()},1200+Math.random()*2800));
+  }
+}}
+function reactTap(){
+  if(!RX||RX.end) return;
+  if(RX.phase==='ready'||RX.phase==='shown'){RX.phase='wait';return showTop()}
+  if(RX.phase==='wait'){RX.times.push(1000);RX.early++;RX.msg='Zu früh! +1 Sekunde'}
+  else if(RX.phase==='go'){const t=Math.round(performance.now()-RX.goAt);RX.times.push(t);RX.msg=t+' ms'}
+  RX.phase='shown';
+  if(RX.times.length>=REACT_N) reactEnd(); showTop();
+}
+function reactEnd(){
+  if(RX.end) return; RX.end=true;
+  while(RX.times.length<REACT_N) RX.times.push(1000);
+  if(!RX.practice) saveDuel('react',RX.day,{ms:Math.round(RX.times.reduce((s,t)=>s+t,0)/REACT_N),early:RX.early,done:true});
+}
+
+/* --- Wort-Raten --- */
+const WORDS=('ABEND ACKER ADLER ALARM ANGEL APFEL ARENA ATLAS BACKE BIRNE BLATT BLICK BLITZ BLUME BLUSE BODEN BOGEN BRAUT BRIEF BUCHE DACHS DAMPF DAUER DECKE DEICH DIELE DRAHT DUNST DURST EBENE EIMER ENGEL ENKEL ERBSE ESSIG FABEL FADEN FAHNE FARBE FEDER FEIER FERNE FISCH FLUSS FOLIE FRAGE FROST FUCHS FUNKE GABEL GEIGE GEIST GLANZ GNADE GRUBE GURKE HAFEN HAGEL HALLE HEIDE HERDE HONIG HOTEL HUMOR INSEL JACKE KAKAO KAMEL KANAL KANNE KANTE KARTE KASSE KATER KERZE KETTE KISTE KLANG KLEID KNALL KNOPF KOHLE KRAFT KRANZ KREIS KREUZ KRONE KUGEL KUNST LACHS LAGER LAMPE LEBEN LEDER LEINE LICHT LIEBE LINDE LINIE LISTE LUNGE MAGEN MANGO MARKT MAUER MEILE MENGE MILCH MINZE MONAT MOTOR MUSIK NADEL NACHT NEBEL NUDEL ONKEL ORGEL PALME PANDA PAUSE PERLE PFERD PFLUG PILOT PIZZA PLATZ PRINZ PUDEL PUMPE PUPPE QUARK RADIO RAMPE RASEN REGEN REISE RINDE ROBBE RUDER SAUNA SCHAF SEIFE SEITE SOCKE SONNE SPIEL SPORT STADT STAHL STALL STERN STIRN STOCK STROM STURM SUPPE TAFEL TANNE TANTE TASSE TAUBE TEICH TIGER TINTE TISCH TORTE TRAUM TULPE VOGEL WAAGE WAGEN WANNE WATTE WELLE WIESE WOLKE WURST ZANGE ZEBRA ZEILE ZWERG').split(' ');
+const KB=['QWERTZUIOP','ASDFGHJKL','⏎YXCVBNM⌫'];
+let WX=null;
+function wordBegin(practice){
+  const d=dayKey(); if(!practice&&played('word',d,me())) return alreadyToast('word');
+  const r=practice?Math.random:seedRng('rf-word-'+d);
+  WX={day:d,practice,sol:WORDS[Math.floor(r()*WORDS.length)],guesses:[],cur:'',start:Date.now(),end:false,won:false}; pushModal(wordModal());
+}
+function wEval(g,s){const res=Array(5).fill('wx'),cnt={};for(let i=0;i<5;i++){if(g[i]===s[i])res[i]='wg';else cnt[s[i]]=(cnt[s[i]]||0)+1}
+  for(let i=0;i<5;i++)if(res[i]!=='wg'&&cnt[g[i]]>0){res[i]='wy';cnt[g[i]]--}return res}
+function wordModal(){return {game:true,
+  html(){
+    if(WX.end&&!WX.showBoard){const ms=WX.ms;return (WX.won?'':`<p class="center">Das Wort war <b>${WX.sol}</b>.</p>`)+duelEndHtml('word',WX.day,WX.practice,WX.won?WX.guesses.length+'. Versuch':'✗',WX.won?'erraten in '+fmtSec(ms):'nicht erraten')}
+    const ks={};let rows='';
+    for(let r=0;r<6;r++){
+      const g=WX.guesses[r], ev=g?wEval(g,WX.sol):null, w=g||(r===WX.guesses.length?WX.cur:'');
+      for(let i=0;i<5;i++){const ch=w[i]||'';rows+=`<div class="${ev?ev[i]:''}">${ch}</div>`;if(ev){const rank={wx:1,wy:2,wg:3};if(!ks[ch]||rank[ev[i]]>rank[ks[ch]])ks[ch]=ev[i]}}
+    }
+    const kb=KB.map(row=>`<div>${[...row].map(c=>`<button class="${ks[c]||''}${c==='⏎'||c==='⌫'?' wide':''}" data-act="wKey" data-k="${c}">${c==='⏎'?'OK':c}</button>`).join('')}</div>`).join('');
+    return `<h2>${WX.practice?'Übung · ':''}🔤 Wort-Raten</h2>
+      <p class="small muted">Grün = richtiger Buchstabe an richtiger Stelle, Gelb = kommt vor, aber woanders. Umlaute kommen nicht vor.</p>
+      <div class="wgrid">${rows}</div><div class="kb">${kb}</div>`;
+  }
+}}
+function wKey(k){
+  if(!WX||WX.end) return;
+  if(k==='⌫'){WX.cur=WX.cur.slice(0,-1);return showTop()}
+  if(k==='⏎'){
+    if(WX.cur.length<5){toast('Bitte 5 Buchstaben eingeben');return}
+    WX.guesses.push(WX.cur);
+    const won=WX.cur===WX.sol; WX.cur='';
+    if(won||WX.guesses.length>=6){WX.end=true;WX.won=won;WX.ms=Date.now()-WX.start;
+      if(!WX.practice) saveDuel('word',WX.day,won?{tries:WX.guesses.length,ms:WX.ms,done:true}:{tries:7,ms:WX.ms,done:false});
+      WX.showBoard=true;showTop();M.timers.push(setTimeout(()=>{WX.showBoard=false;showTop()},1600));return}
+    return showTop();
+  }
+  if(WX.cur.length<5){WX.cur+=k;showTop()}
+}
+
+/* --- Zahlenjagd --- */
+let NX=null;
+function numBegin(practice){
+  const d=dayKey(); if(!practice&&played('num',d,me())) return alreadyToast('num');
+  const r=practice?Math.random:seedRng('rf-num-'+d);
+  NX={day:d,practice,order:sshuffle([...Array(25)].map((_,i)=>i+1),r),next:1,errors:0,start:0,end:false,bad:null}; pushModal(numModal());
+}
+function numModal(){return {game:true,
+  html(){
+    if(NX.end) return duelEndHtml('num',NX.day,NX.practice,fmtSec(NX.ms),NX.errors?`inkl. ${NX.errors} Fehler (je 1 Sekunde)`:'ohne Fehler 👌');
+    if(!NX.start) return `<h2>${NX.practice?'Übung · ':''}🎯 Zahlenjagd</h2><p class="small muted">Gleich erscheinen die Zahlen 1 bis 25 durcheinander. Tippe sie so schnell wie möglich der Reihe nach an. Jeder falsche Tipp kostet 1 Sekunde.</p><button class="btn primary big" data-act="numGo">Los!</button>`;
+    return `<div class="row small muted" style="padding-right:40px"><span>Nächste: <b style="color:var(--ink);font-size:18px">${NX.next}</b></span><span><span id="ntime">0,0 s</span> · ${NX.errors} Fehler</span></div>
+      <div class="ngrid">${NX.order.map(n=>`<button class="${n<NX.next?'done':''}${NX.bad===n?' bad':''}" data-act="numTap" data-n="${n}">${n}</button>`).join('')}</div>`;
+  },
+  init(){if(NX.end||!NX.start)return;const tick=()=>{const el=$('#ntime');if(el)el.textContent=fmtSec(Date.now()-NX.start+NX.errors*1000)};tick();M.timers.push(setInterval(tick,100))}
+}}
+function numTap(n){
+  if(!NX||NX.end||!NX.start) return;
+  if(n===NX.next){NX.next++;NX.bad=null;
+    if(NX.next>25){NX.end=true;NX.ms=Date.now()-NX.start+NX.errors*1000;if(!NX.practice)saveDuel('num',NX.day,{ms:NX.ms,errors:NX.errors,done:true})}}
+  else if(n>=NX.next){NX.errors++;NX.bad=n}
+  showTop();
+}
+
+function duelAbort(){
+  const msg='Abgebrochen – das Ergebnis bis hierhin zählt.';
+  if(MX&&!MX.end&&!MX.practice&&MX.start){mathEnd(false);toast(msg)}
+  if(G&&G.duel&&!G.finished&&G.moves>0){G.finished=true;saveDuel('mem',G.duel,{moves:G.moves,ms:Date.now()-G.start,done:false});toast('Memory-Duell abgebrochen – zählt als nicht geschafft.')}
+  if(RX&&!RX.end&&!RX.practice&&RX.phase!=='ready'){reactEnd();toast('Abgebrochen – fehlende Runden zählen je 1 Sekunde.')}
+  if(WX&&!WX.end&&!WX.practice&&WX.guesses.length){WX.end=true;saveDuel('word',WX.day,{tries:7,ms:Date.now()-WX.start,done:false});toast('Abgebrochen – zählt als nicht erraten.')}
+  if(NX&&!NX.end&&!NX.practice&&NX.start){NX.end=true;saveDuel('num',NX.day,{ms:0,errors:NX.errors,done:false});toast('Abgebrochen – zählt als nicht geschafft.')}
+}
+
+/* --- Zug um Zug (über Google Drive) --- */
+const matchesOf=g=>S.state.matches.filter(m=>(m.g||'c4')===g);
+function lastMatch(g){const ms=matchesOf(g);return ms.length?ms.reduce((x,y)=>y.t>x.t?y:x):null}
+function movesOf(m){return S.state.moves.filter(x=>x.m===m.id).sort((x,y)=>x.n-y.n||x.t-y.t)}
+function applyResign(b,mv){if(!b.winner&&!b.draw){const r=mv.find(x=>x.resign);if(r){b.resign=r.p;b.winner=other(r.p)}}b.over=!!b.winner||b.draw;return b}
+function turnPoll(){if(Drive.on()) M.timers.push(setInterval(()=>{if(Drive.valid()&&!document.hidden)sync(false)},8000))}
+function newMatch(g){
+  const last=lastMatch(g), starter=last?other(last.starter):me();
+  S.state.matches.push({id:uid(),g,t:Date.now(),starter}); commit(); scheduleSync(true); NSEL=null; showTop();
+  toast(starter===me()?'Neues Spiel – du fängst an!':`Neues Spiel – ${P(starter).name} fängt an.`);
+}
+function resignMatch(g){
+  const m=lastMatch(g); if(!m||!confirm('Wirklich aufgeben?')) return;
+  S.state.moves.push({id:uid(),m:m.id,n:-1,p:me(),resign:true,t:Date.now()}); commit(); scheduleSync(true); NSEL=null; showTop();
+}
+function matchStats(g,board){const res={a:0,b:0,draw:0};matchesOf(g).forEach(m=>{const b=board(m);if(b.winner)res[b.winner]++;else if(b.draw)res.draw++});return res}
+function matchStatus(b,solo,winTxt){
+  const k=me(),o=other(k);
+  if(b.winner) return b.resign?`${esc(P(b.resign).name)} hat aufgegeben – ${esc(P(b.winner).name)} gewinnt 🏆`:(b.winner===k?'Du hast gewonnen! 🏆':`${esc(P(b.winner).name)} gewinnt 🏆`)+(winTxt?'<br><span class="small muted">'+winTxt+'</span>':'');
+  if(b.draw) return 'Unentschieden 🤝';
+  if(solo) return `${esc(P(b.turn).name)} ist am Zug`;
+  return b.turn===k?'<b>Du bist am Zug!</b>':`${esc(P(o).name)} ist am Zug …`;
+}
+function matchHead(t,st){return `<h2>${t}</h2><div class="legend" style="justify-content:center;margin-bottom:4px"><span><span class="dot" style="--pc:var(--a)"></span>${esc(P('a').name)} ${st.a}</span><span>:</span><span><span class="dot" style="--pc:var(--b)"></span>${esc(P('b').name)} ${st.b}</span></div>`}
+const soloNote=solo=>`<p class="small muted center" style="margin-top:10px">${solo?'Ohne Google Drive: abwechselnd auf diesem Handy spielen.':'Solange dieses Fenster offen ist, kommen die Züge alle paar Sekunden automatisch an.'}</p>`;
+
+/* Vier gewinnt */
+function c4Check(g,col){
+  const row=g[col].length-1,p=g[col][row],at=(c,r)=>c>=0&&c<7&&r>=0?g[c][r]:undefined;
+  for(const [dc,dr] of [[1,0],[0,1],[1,1],[1,-1]]){
+    const cells=[[col,row]];
+    for(const s of [1,-1]){let c=col+dc*s,r=row+dr*s;while(at(c,r)===p){cells.push([c,r]);c+=dc*s;r+=dr*s}}
+    if(cells.length>=4) return cells.map(x=>x.join(','));
+  }
+  return null;
+}
+function c4Board(m){
+  const grid=[[],[],[],[],[],[],[]], mv=movesOf(m);
+  let turn=m.starter,winner=null,line=[],n=0,last=null;
+  for(const x of mv){
+    if(x.resign||x.n!==n||x.p!==turn||!(x.col>=0&&x.col<7)||grid[x.col].length>=6) continue;
+    grid[x.col].push(x.p); n++; last=x.col+','+(grid[x.col].length-1);
+    const w=c4Check(grid,x.col); if(w){winner=x.p;line=w;break}
+    turn=other(turn);
+  }
+  return applyResign({grid,turn,winner,line,n,last,draw:!winner&&n>=42},mv);
+}
+const c4Stats=()=>matchStats('c4',c4Board);
+function c4Modal(){return {refresh:()=>true,
+  html(){
+    const k=me(),m=lastMatch('c4'),solo=!Drive.on(),head=matchHead('🔴 Vier gewinnt',c4Stats());
+    if(!m) return head+`<p class="small muted center">Abwechselnd einen Stein einwerfen. Wer zuerst vier in einer Reihe hat – waagerecht, senkrecht oder schräg – gewinnt.</p><button class="btn primary big" data-act="newMatch" data-g="c4">Neues Spiel starten</button>`;
+    const b=c4Board(m), can=!b.over&&(solo||b.turn===k);
+    let cells='';
+    for(let r=5;r>=0;r--)for(let c=0;c<7;c++){const p=b.grid[c][r]||'',key=c+','+r;
+      cells+=`<button class="${p}${b.line.includes(key)?' win':''}${key===b.last&&!b.over?' last':''}" data-act="c4Drop" data-c="${c}" ${can&&b.grid[c].length<6?'':'disabled'} aria-label="Spalte ${c+1}"></button>`}
+    return head+`<p class="center" style="margin:6px 0 0"><span class="dot" style="display:inline-block;--pc:var(--${b.over?(b.winner||'acc'):b.turn})"></span> ${matchStatus(b,solo)}</p>
+      <div class="c4">${cells}</div>
+      ${b.over?'<button class="btn primary" data-act="newMatch" data-g="c4">Neues Spiel</button>':'<button class="btn ghost danger" data-act="resign" data-g="c4">Aufgeben</button>'}${soloNote(solo)}`;
+  },
+  init:turnPoll
+}}
+function c4Drop(col){
+  const m=lastMatch('c4'); if(!m) return; const b=c4Board(m), solo=!Drive.on();
+  if(b.over||(!solo&&b.turn!==me())||b.grid[col].length>=6) return;
+  S.state.moves.push({id:uid(),m:m.id,n:b.n,p:b.turn,col,t:Date.now()});
+  commit(); scheduleSync(true); showTop();
+}
+
+/* Zigaretten-Duell (Nim): Wer die letzte Zigarette nehmen muss, verliert */
+const NIM_ROWS=[1,3,5,7];
+let NSEL=null;
+function nimBoard(m){
+  const heaps=[...NIM_ROWS], mv=movesOf(m);
+  let turn=m.starter,winner=null,n=0,last=null;
+  for(const x of mv){
+    if(x.resign||x.n!==n||x.p!==turn||!(x.row>=0&&x.row<4)||!(x.cnt>=1&&x.cnt<=heaps[x.row])) continue;
+    heaps[x.row]-=x.cnt; n++; last=x;
+    if(heaps.every(h=>h===0)){winner=other(x.p);break}
+    turn=other(turn);
+  }
+  return applyResign({heaps,turn,winner,n,last,draw:false},mv);
+}
+const nimStats=()=>matchStats('nim',nimBoard);
+function nimModal(){return {refresh:()=>!NSEL,
+  html(){
+    const k=me(),m=lastMatch('nim'),solo=!Drive.on(),head=matchHead('🚬 Zigaretten-Duell',nimStats());
+    const rules='Ihr nehmt abwechselnd Zigaretten weg – beliebig viele, aber immer nur aus <b>einer</b> Reihe. Wer die <b>letzte</b> Zigarette nehmen muss, verliert.';
+    if(!m) return head+`<p class="small muted center">${rules}</p><button class="btn primary big" data-act="newMatch" data-g="nim">Neues Spiel starten</button>`;
+    const b=nimBoard(m), can=!b.over&&(solo||b.turn===k), sel=NSEL&&NSEL.m===m.id?NSEL:null;
+    const rows=b.heaps.map((h,r)=>`<div class="nrow">${[...Array(NIM_ROWS[r])].map((_,i)=>i<h?`<button class="${sel&&sel.row===r&&i>=sel.from?'sel':''}" data-act="nimPick" data-r="${r}" data-i="${i}" ${can?'':'disabled'}>🚬</button>`:'<span>·</span>').join('')}</div>`).join('');
+    const lastTxt=b.last&&!b.over?`<p class="small muted center">${esc(P(b.last.p).name)} hat zuletzt ${b.last.cnt} aus Reihe ${b.last.row+1} genommen.</p>`:'';
+    const winTxt=b.winner&&!b.resign?`${esc(P(other(b.winner)).name)} musste die letzte nehmen.`:'';
+    return head+`<p class="center" style="margin:6px 0 0"><span class="dot" style="display:inline-block;--pc:var(--${b.over?b.winner:b.turn})"></span> ${matchStatus(b,solo,winTxt)}</p>${lastTxt}
+      <div class="nim">${rows}</div>
+      ${b.over?'<button class="btn primary" data-act="newMatch" data-g="nim">Neues Spiel</button>'
+        :sel?`<button class="btn primary" data-act="nimTake">${b.heaps[sel.row]-sel.from} ${b.heaps[sel.row]-sel.from===1?'Zigarette':'Zigaretten'} wegnehmen</button><button class="btn ghost" style="margin-top:8px" data-act="nimCancel">Auswahl aufheben</button>`
+        :`<p class="small muted center">${can?'Tippe eine Zigarette an – sie und alle rechts daneben werden ausgewählt.':''}</p><button class="btn ghost danger" data-act="resign" data-g="nim">Aufgeben</button>`}
+      <details style="margin-top:10px"><summary class="small muted">Spielregeln</summary><p class="small muted">${rules}</p></details>${soloNote(solo)}`;
+  },
+  init:turnPoll
+}}
+function nimTake(){
+  const m=lastMatch('nim'); if(!m||!NSEL) return; const b=nimBoard(m), solo=!Drive.on(), cnt=b.heaps[NSEL.row]-NSEL.from;
+  if(b.over||(!solo&&b.turn!==me())||cnt<1){NSEL=null;return showTop()}
+  S.state.moves.push({id:uid(),m:m.id,n:b.n,p:b.turn,row:NSEL.row,cnt,t:Date.now()});
+  NSEL=null; commit(); scheduleSync(true); showTop();
+}
+
+/* --- Übersicht --- */
+const BEGIN={math:mathBegin,mem:memDuelBegin,react:reactBegin,word:wordBegin,num:numBegin};
+function totalStats(){const r={a:0,b:0};[quizStats(),...DAILY.slice(1).map(duelStats),c4Stats(),nimStats()].forEach(s=>{r.a+=s.a;r.b+=s.b});return r}
+function duelsModal(){return {refresh:()=>true,
+  html(){
+    const k=me(),o=other(k),d=dayKey(),tot=totalStats();
+    const res=(r,fmt)=>r?fmt(r):'<span class="muted">offen</span>';
+    const wtxt=w=>w?(w==='draw'?'🤝 Unentschieden':`🏆 ${esc(P(w).name)}`):'';
+    const box=(t,desc,mine,theirs,fmt,w,st,btns)=>`<div class="card dbox">
+      <div class="row"><b>${t}</b><span class="small muted">Stand ${st.a}:${st.b}</span></div>
+      <div class="small muted" style="margin:2px 0 6px">${desc}</div>
+      <div class="row small"><span>${esc(P(k).name)}: <b>${res(mine,fmt)}</b></span><span>${esc(P(o).name)}: <b>${res(theirs,fmt)}</b></span></div>
+      ${w?`<div class="small" style="margin-top:2px"><b>${wtxt(w)}</b></div>`:''}<div class="two" style="margin-top:8px">${btns}</div></div>`;
+    const daily=DAILY.map(g=>{
+      if(g==='quiz'){const qm=quizResult(d,k);return box('🧠 Quiz','5 Fragen, 15 Sekunden pro Frage.',qm,quizResult(d,o),r=>`${r.score}/${QUIZ_N} · ${fmtSec(r.ms)}`,duelWinner(quizResult(d,'a'),quizResult(d,'b')),quizStats(),
+        `<button class="btn ${qm?'ghost':'primary'}" data-act="quiz">${qm?'Ergebnis':'Spielen'}</button><button class="btn ghost" data-act="quiz">Üben</button>`)}
+      const x=DUELS[g],mine=duelResult(g,d,k);
+      return box(x.t,x.d,mine,duelResult(g,d,o),x.fmt,duelWin(g,d),duelStats(g),
+        (mine?'<button class="btn ghost" disabled>Gespielt ✓</button>':`<button class="btn primary" data-act="dStart" data-g="${g}">Spielen</button>`)+`<button class="btn ghost" data-act="dPractice" data-g="${g}">Üben</button>`);
+    }).join('');
+    const tb=(t,g,board,stats)=>{const m=lastMatch(g),b=m&&board(m),st=stats(),my=b&&!b.over&&b.turn===k;
+      const s=!m?'Noch kein Spiel.':b.over?(b.winner?`Letztes Spiel: ${wtxt(b.winner)}`:'Letztes Spiel: 🤝 Unentschieden'):(my?'<b>Du bist am Zug!</b>':`${esc(P(o).name)} ist am Zug.`);
+      return `<div class="card dbox"><div class="row"><b>${t}</b><span class="small muted">Stand ${st.a}:${st.b}</span></div><p class="small" style="margin:4px 0 8px">${s}</p><button class="btn ${my?'primary':''}" data-act="${g}">Öffnen</button></div>`};
+    return `<h2>🎮 Duelle</h2>
+      <div class="kpis"><div><b style="color:var(--a)">${tot.a}</b><span>${esc(P('a').name)}</span></div><div><b>Gesamt</b><span>Siege</span></div><div><b style="color:var(--b)">${tot.b}</b><span>${esc(P('b').name)}</span></div></div>
+      <h3>Zug um Zug</h3>${tb('🔴 Vier gewinnt','c4',c4Board,c4Stats)}${tb('🚬 Zigaretten-Duell','nim',nimBoard,nimStats)}
+      <h3>Tagesduelle (${dayLabel(d)})</h3><p class="small muted">Jeder spielt einmal am Tag mit denselben Aufgaben. „Üben“ zählt nicht.</p>${daily}
+      ${Drive.on()?'':'<p class="small muted">Tipp: Mit Google Drive seht ihr die Ergebnisse des anderen auf eurem eigenen Handy.</p>'}`;
+  },
+  init(){if(Drive.on()) M.timers.push(setInterval(()=>{if(Drive.valid()&&!document.hidden)sync(false)},15000))}
+}}
+function duelsCard(){
+  const k=me(),o=other(k),d=dayKey(),tot=totalStats();
+  const open=DAILY.filter(g=>!played(g,d,k)).length;
+  const waiting=DAILY.filter(g=>played(g,d,o)&&!played(g,d,k)).length;
+  const turns=[['c4','🔴 Vier gewinnt',c4Board],['nim','🚬 Zigaretten-Duell',nimBoard]].filter(([g,,bd])=>{const m=lastMatch(g),b=m&&bd(m);return b&&!b.over&&b.turn===k}).map(x=>x[1]);
+  return `<div class="card"><div class="row"><b>🎮 Duelle</b><span class="small muted">Gesamt ${tot.a}:${tot.b}</span></div>
+   <p class="small" style="margin:8px 0 2px">${open?`Heute noch offen: ${open} von ${DAILY.length} Tagesduellen`:'Alle Tagesduelle gespielt 💪'}</p>
+   ${waiting?`<p class="small" style="margin:2px 0">${esc(P(o).name)} hat bei ${waiting} schon vorgelegt – jetzt du!</p>`:''}
+   ${turns.length?`<p class="small" style="margin:2px 0"><b>Du bist am Zug: ${turns.join(', ')}</b></p>`:''}
+   <button class="btn ${open||turns.length?'primary':'ghost'}" style="margin-top:10px" data-act="duels">Zu den Duellen</button></div>`;
+}
+
 /* ============ Dateien ============ */
 let fileCb=null;
 function chooseFile(cb){fileCb=cb;const f=$('#filein');f.value='';f.click()}
@@ -1022,7 +1412,7 @@ async function importIntoSession(j){
 /* ============ Aktionen ============ */
 const ACT = {
   tab(el){ui.tab=el.dataset.tab;render();window.scrollTo(0,0)},
-  close(){quizAbort();popModal()},
+  close(){quizAbort();duelAbort();popModal()},
   goSettings(){ui.tab='more';ui.open='settings';render();window.scrollTo(0,0)},
   sos(){sosStart=Date.now();sosTip=tipText();pushModal(sosModal())},
   newTip(){sosTip=tipText();$('#tipTxt').textContent=sosTip},
@@ -1063,6 +1453,23 @@ const ACT = {
   },
   checkUpdate(){checkUpdate(true)},
   quiz(){Q=null;pushModal(quizModal());scheduleSync(true)},
+  duels(){pushModal(duelsModal());scheduleSync(true)},
+  dStart(el){BEGIN[el.dataset.g](false)},
+  dPractice(el){const top=M.stack[M.stack.length-1];if(top&&top.game)M.stack.pop();BEGIN[el.dataset.g](true)},
+  mathPractice(){mathBegin(true)},
+  mathAns(el){mathAns(el.dataset.v)},
+  reactTap(){reactTap()},
+  wKey(el){wKey(el.dataset.k)},
+  numGo(){NX.start=Date.now();showTop()},
+  numTap(el){numTap(+el.dataset.n)},
+  c4(){NSEL=null;pushModal(c4Modal());scheduleSync(true)},
+  nim(){NSEL=null;pushModal(nimModal());scheduleSync(true)},
+  c4Drop(el){c4Drop(+el.dataset.c)},
+  nimPick(el){const m=lastMatch('nim');NSEL={m:m&&m.id,row:+el.dataset.r,from:+el.dataset.i};showTop()},
+  nimTake(){nimTake()},
+  nimCancel(){NSEL=null;showTop()},
+  newMatch(el){newMatch(el.dataset.g)},
+  resign(el){resignMatch(el.dataset.g)},
   quizStart(){if(quizResult(dayKey(),me())){toast('Du hast heute schon gespielt – morgen gibt es neue Fragen!');return}quizBegin(false)},
   quizPractice(){quizBegin(true)},
   quizAns(el){quizAnswer(+el.dataset.i)},
@@ -1090,7 +1497,7 @@ document.addEventListener('click',e=>{
   if(el.tagName==='BUTTON'&&el.type==='submit'&&el.form)return;
   const f=ACT[el.dataset.act];if(f){e.preventDefault();f(el,e)}
 });
-$('#modal').addEventListener('click',e=>{if(e.target.id==='modal'){quizAbort();popModal()}});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal'){quizAbort();duelAbort();popModal()}});
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.out){const o=document.getElementById(t.dataset.out);if(o)o.textContent=t.value}});
 document.addEventListener('toggle',e=>{const d=e.target;if(d.tagName==='DETAILS'&&d.dataset.sec){if(d.open)ui.open=d.dataset.sec;else if(ui.open===d.dataset.sec)ui.open=null}},true);
 
